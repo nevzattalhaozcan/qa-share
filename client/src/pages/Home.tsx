@@ -14,7 +14,7 @@ export default function Home() {
     const userProjects = projects.filter(p => {
         const creatorId = String(p.createdBy);
         return creatorId === String(userId) || p.members.some(m => {
-            const memberId = (m as any)._id || m.id;
+            const memberId = (m as any).userId || (m as any)._id || m.id;
             return String(memberId) === String(userId);
         });
     });
