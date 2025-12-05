@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Bug, User, Lock, UserCircle, Eye, EyeOff } from 'lucide-react';
@@ -8,6 +9,7 @@ import { useNavigate, Link } from 'react-router-dom';
 
 export default function Register() {
     const { register } = useAuth();
+    const { refetchData } = useData();
     const navigate = useNavigate();
     const [name, setName] = useState('');
     const [username, setUsername] = useState('');
@@ -43,6 +45,7 @@ export default function Register() {
         const result = await register(name, username, password);
 
         if (result.success) {
+            await refetchData();
             navigate('/');
         } else {
             setError(result.error || 'Registration failed');

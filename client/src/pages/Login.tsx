@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Bug, User, Lock, Eye, EyeOff } from 'lucide-react';
@@ -8,6 +9,7 @@ import { useNavigate, Link } from 'react-router-dom';
 
 export default function Login() {
     const { login } = useAuth();
+    const { refetchData } = useData();
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -25,6 +27,7 @@ export default function Login() {
         const success = await login(username, password);
 
         if (success) {
+            await refetchData();
             navigate('/');
         } else {
             setError('Invalid username or password');
