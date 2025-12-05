@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Copy, Share2, Trash2, Plus, Check, Key } from 'lucide-react';
+import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Helper function to convert URLs to clickable links
@@ -30,11 +31,25 @@ const linkifyText = (text: string) => {
 };
 
 export default function Notes() {
-    const { notes, addNote, deleteNote } = useData();
+    const { notes, addNote, updateNote, deleteNote } = useData();
+    const { user } = useAuth();
     const [type, setType] = useState<'simple' | 'kv'>('simple');
     const [content, setContent] = useState('');
     const [label, setLabel] = useState('');
     const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    const isQA = user?.role === 'QA';
+
+    // Sort notes: pinned first, then by creation date
+    const sortedNotes = [...notes]
+        .filter(note => !note.hidden) // Don't show hidden notes
+        .sort((a, b) => {
+            // Pinned notes come first
+            if (a.pinned && !b.pinned) return -1;
+            if (!a.pinned && b.pinned) return 1;
+            // Then sort by creation date (newest first)
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
 
     const handleAddNote = (e: React.FormEvent) => {
         e.preventDefault();
@@ -73,6 +88,14 @@ export default function Notes() {
             // Fallback to copy if share not supported
             handleCopy('share-fallback', text);
         }
+    };
+
+    const handleTogglePin = async (id: string, currentPinned: boolean) => {
+        await updateNote(id, { pinned: !currentPinned });
+    };
+
+    const handleToggleHide = async (id: string) => {
+        await updateNote(id, { hidden: true });
     };
 
     return (
@@ -117,7 +140,7 @@ export default function Notes() {
 
             <div className="space-y-3">
                 <AnimatePresence mode="popLayout">
-                    {notes.map((note) => {
+                    {sortedNotes.map((note) => {
                         const noteId = (note as any)._id || note.id;
                         const textToCopy = note.type === 'kv' ? `${note.label}: ${note.content}` : note.content;
 
@@ -128,7 +151,9 @@ export default function Notes() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
-                                className="glass-card p-3 rounded-xl flex items-start justify-between gap-3 group"
+                                className={`glass-card p-3 rounded-xl flex items-start justify-between gap-3 group ${
+                                    note.pinned ? 'ring-2 ring-primary/30' : ''
+                                }`}
                             >
                                 <div className="flex-1 pt-1 min-w-0">
                                     {note.type === 'kv' && (
@@ -145,6 +170,15 @@ export default function Notes() {
                                 </div>
 
                                 <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={() => handleTogglePin(noteId, note.pinned || false)}
+                                        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
+                                            note.pinned ? 'text-primary' : 'text-slate-400 hover:text-white'
+                                        }`}
+                                        title={note.pinned ? 'Unpin' : 'Pin to top'}
+                                    >
+                                        <Pin size={16} className={note.pinned ? 'fill-current' : ''} />
+                                    </button>
                                     <button
                                         onClick={() => handleCopy(noteId, textToCopy)}
                                         className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white"
@@ -163,6 +197,15 @@ export default function Notes() {
                                     >
                                         <Share2 size={16} />
                                     </button>
+                                    {isQA && (
+                                        <button
+                                            onClick={() => handleToggleHide(noteId)}
+                                            className="p-2 hover:bg-yellow-500/20 rounded-lg transition-colors text-slate-400 hover:text-yellow-400"
+                                            title="Hide note"
+                                        >
+                                            <EyeOff size={16} />
+                                        </button>
+                                    )}
                                     <button
                                         onClick={() => deleteNote(noteId)}
                                         className="p-2 hover:bg-red-500/20 rounded-lg transition-colors text-slate-400 hover:text-red-400"
@@ -176,7 +219,7 @@ export default function Notes() {
                     })}
                 </AnimatePresence>
 
-                {notes.length === 0 && (
+                {sortedNotes.length === 0 && (
                     <div className="text-center py-8 text-muted-foreground text-sm">
                         No notes yet. Add one above!
                     </div>

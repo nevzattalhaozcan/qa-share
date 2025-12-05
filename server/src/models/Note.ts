@@ -4,6 +4,8 @@ const noteSchema = new mongoose.Schema({
     type: { type: String, enum: ['simple', 'kv'], required: true },
     label: { type: String },
     content: { type: String, required: true },
+    pinned: { type: Boolean, default: false },
+    hidden: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
 });
 

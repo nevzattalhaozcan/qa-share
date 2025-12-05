@@ -22,6 +22,17 @@ export const createNote = async (req: Request, res: Response) => {
     }
 };
 
+export const updateNote = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const note = await Note.findByIdAndUpdate(id, req.body, { new: true });
+        res.json(note);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
 export const deleteNote = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;

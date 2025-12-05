@@ -70,6 +70,8 @@ export interface Note {
     type: 'simple' | 'kv';
     label?: string; // Key for KV
     content: string; // Value or Simple text
+    pinned?: boolean;
+    hidden?: boolean;
     createdAt: string;
 }
 
@@ -118,6 +120,7 @@ interface DataContextType {
     updateBugStatus: (id: string, status: Bug['status']) => void;
     updateTestCaseStatus: (id: string, status: TestCase['status']) => void;
     addNote: (note: Omit<Note, 'id' | 'createdAt'>) => void;
+    updateNote: (id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => void;
     deleteNote: (id: string) => void;
     linkItems: (type1: 'test' | 'bug', id1: string, type2: 'test' | 'bug', id2: string) => void;
     unlinkItems: (type1: 'test' | 'bug', id1: string, type2: 'test' | 'bug', id2: string) => void;
@@ -364,6 +367,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const updateNote = async (id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => {
+        try {
+            const res = await api.put(`/notes/${id}`, updates);
+            setNotes(notes.map(n => ((n as any)._id || n.id) === id ? res.data : n));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const deleteNote = async (id: string) => {
         try {
             await api.delete(`/notes/${id}`);
@@ -482,6 +494,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             linkItems,
             unlinkItems,
             addNote,
+            updateNote,
             deleteNote,
             addNotification,
             markNotificationAsRead,
