@@ -55,7 +55,7 @@ export const createProject = async (req: Request, res: Response) => {
         if (req.body.members && Array.isArray(req.body.members)) {
             // Add any additional members from frontend, avoiding duplicates
             req.body.members.forEach((member: any) => {
-                const exists = newProject.members.some(m => 
+                const exists = newProject.members.some(m =>
                     String(m._id) === String(member._id) || m.username === member.username
                 );
                 if (!exists) {
@@ -88,10 +88,7 @@ export const addTeamMember = async (req: Request, res: Response) => {
         const { id } = req.params;
         const member = req.body;
 
-        // Check if user exists in User collection, if not create one?
-        // Frontend generates password. 
-        // We should probably create a User account for them so they can login.
-
+        // Check if user exists in User collection, if not create one
         let user = await User.findOne({ username: member.username });
         if (!user) {
             const salt = await bcrypt.genSalt(10);
@@ -120,7 +117,14 @@ export const addTeamMember = async (req: Request, res: Response) => {
             return res.status(400).json({ msg: 'Maximum 5 Developers allowed per project' });
         }
 
-        project.members.push(member);
+        // Add member with the actual user's ID
+        project.members.push({
+            userId: user._id,
+            name: member.name,
+            username: member.username,
+            password: member.password, // Store original password for display (not hashed)
+            role: member.role
+        });
         await project.save();
         res.json(project);
     } catch (err) {
