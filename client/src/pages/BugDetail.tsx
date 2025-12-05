@@ -109,106 +109,124 @@ export default function BugDetail() {
     };
 
     return (
-        <div className="space-y-6 pb-20">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => navigate('/bugs')}>
-                    <ArrowLeft size={24} />
-                </Button>
-                <div className="flex-1 min-w-0">
-                    {bug.friendlyId && (
-                        <span className="text-xs font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded mb-1 inline-block">
-                            {bug.friendlyId}
-                        </span>
-                    )}
-                    <h1 className="text-xl font-bold break-words">{bug.title}</h1>
-                </div>
-                {canEditBugs && (
-                    <Button variant="ghost" size="icon" onClick={() => {
-                        const bugId = (bug as any)._id || bug.id;
-                        navigate(`/bugs/${bugId}/edit`);
-                    }}>
-                        <Edit size={20} />
+        <div className="space-y-4 pb-20">
+            {/* Header */}
+            <div className="glass-card p-4 rounded-2xl">
+                <div className="flex items-start gap-3">
+                    <Button variant="ghost" size="icon" onClick={() => navigate('/bugs')} className="mt-1">
+                        <ArrowLeft size={24} />
                     </Button>
-                )}
-                {canEditBugs && canDeleteBug && (
-                    <button
-                        onClick={() => setShowDeleteModal(true)}
-                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors text-red-500"
-                        title="Delete bug"
-                    >
-                        <Trash2 size={20} />
-                    </button>
-                )}
-            </div>
-
-            <div className="glass-card p-6 rounded-2xl space-y-6">
-                <div className="flex items-center justify-between">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${bug.severity === 'Critical' ? 'bg-red-500/20 text-red-500' :
-                        bug.severity === 'High' ? 'bg-orange-500/20 text-orange-500' :
-                            'bg-blue-500/10 text-blue-500'
-                        }`}>
-                        {bug.severity} Severity
-                    </span>
-                    <div className="flex items-center gap-2">
-                        <StatusDropdown
-                            currentStatus={bug.status}
-                            options={['Draft', 'Opened', 'Fixed', 'Closed']}
-                            onUpdate={(status) => handleStatusChange(status as any)}
-                            colorMap={{
-                                'Draft': 'bg-gray-500/10 text-gray-400',
-                                'Opened': 'bg-red-500/10 text-red-500',
-                                'Fixed': 'bg-green-500/10 text-green-500',
-                                'Closed': 'bg-slate-500/10 text-slate-400'
-                            }}
-                            disabled={!canEditBugStatus}
-                            align="right"
-                        />
+                    <div className="flex-1 min-w-0 space-y-3">
+                        <div className="space-y-2">
+                            {bug.friendlyId && (
+                                <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded inline-block">
+                                    {bug.friendlyId}
+                                </span>
+                            )}
+                            <h1 className="text-2xl font-bold break-words leading-tight">{bug.title}</h1>
+                        </div>
+                        
+                        {/* Status and Severity Row */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                                bug.severity === 'Critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                                bug.severity === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                                'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            }`}>
+                                {bug.severity} Severity
+                            </span>
+                            <StatusDropdown
+                                currentStatus={bug.status}
+                                options={['Draft', 'Opened', 'Fixed', 'Closed']}
+                                onUpdate={(status) => handleStatusChange(status as any)}
+                                colorMap={{
+                                    'Draft': 'bg-gray-500/10 text-gray-400',
+                                    'Opened': 'bg-red-500/10 text-red-500',
+                                    'Fixed': 'bg-green-500/10 text-green-500',
+                                    'Closed': 'bg-slate-500/10 text-slate-400'
+                                }}
+                                disabled={!canEditBugStatus}
+                                align="left"
+                            />
+                        </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-1">
+                        {canEditBugs && (
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                const bugId = (bug as any)._id || bug.id;
+                                navigate(`/bugs/${bugId}/edit`);
+                            }}>
+                                <Edit size={20} />
+                            </Button>
+                        )}
+                        {canEditBugs && canDeleteBug && (
+                            <button
+                                onClick={() => setShowDeleteModal(true)}
+                                className="p-2 hover:bg-red-500/20 rounded-lg transition-colors text-red-500"
+                                title="Delete bug"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+                        )}
                     </div>
                 </div>
+            </div>
 
+            {/* Content Card */}
+            <div className="glass-card p-6 rounded-2xl space-y-6">
                 {bug.tags && bug.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 pb-4 border-b border-white/5">
                         {bug.tags.map(tag => (
-                            <span key={tag} className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium border border-primary/20">
+                            <span key={tag} className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-sm font-medium border border-primary/20">
                                 {tag}
                             </span>
                         ))}
                     </div>
                 )}
 
-                <div className="space-y-2">
-                    <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Description</h3>
-                    <p>{bug.description || 'No description provided.'}</p>
+                <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Description</h3>
+                    <p className="text-base leading-relaxed">{bug.description || 'No description provided.'}</p>
                 </div>
 
-                <div className="space-y-2">
-                    <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Steps to Reproduce</h3>
-                    <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Steps to Reproduce</h3>
+                    <div className="bg-slate-900/50 p-5 rounded-xl border border-white/10">
                         <div 
-                            className="whitespace-pre-wrap font-mono text-sm"
+                            className="whitespace-pre-wrap font-mono text-sm leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: formatListText(bug.stepsToReproduce) }}
                         />
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Expected Result</h3>
-                    <div className="bg-green-900/10 p-4 rounded-xl border border-green-500/20">
-                        <p className="whitespace-pre-wrap text-sm">{bug.expectedResult || 'No expected result provided.'}</p>
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-green-400 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            Expected Result
+                        </h3>
+                        <div className="bg-green-500/5 p-5 rounded-xl border border-green-500/20">
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{bug.expectedResult || 'No expected result provided.'}</p>
+                        </div>
                     </div>
-                </div>
 
-                <div className="space-y-2">
-                    <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Actual Result</h3>
-                    <div className="bg-red-900/10 p-4 rounded-xl border border-red-500/20">
-                        <p className="whitespace-pre-wrap text-sm">{bug.actualResult || 'No actual result provided.'}</p>
+                    <div className="space-y-3">
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-red-400 flex items-center gap-2">
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            Actual Result
+                        </h3>
+                        <div className="bg-red-500/5 p-5 rounded-xl border border-red-500/20">
+                            <p className="whitespace-pre-wrap text-sm leading-relaxed">{bug.actualResult || 'No actual result provided.'}</p>
+                        </div>
                     </div>
                 </div>
 
                 {bug.attachments && bug.attachments.length > 0 && (
-                    <div className="space-y-2">
-                        <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Attachments</h3>
-                        <div className="flex flex-wrap gap-3">
+                    <div className="space-y-3">
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Attachments ({bug.attachments.filter(url => url && url.trim() && !url.startsWith('blob:')).length})</h3>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                             {bug.attachments
                                 .filter(url => url && url.trim() && !url.startsWith('blob:'))
                                 .map((url, index) => {

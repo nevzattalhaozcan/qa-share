@@ -66,93 +66,108 @@ export default function TestCaseDetail() {
     });
 
     return (
-        <div className="space-y-6 pb-20">
-            <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => navigate('/tests')}>
-                    <ArrowLeft size={24} />
-                </Button>
-                <div className="flex-1 min-w-0">
-                    {testCase.friendlyId && (
-                        <span className="text-xs font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded mb-1 inline-block">
-                            {testCase.friendlyId}
-                        </span>
+        <div className="space-y-4 pb-20">
+            {/* Header */}
+            <div className="glass-card p-4 rounded-2xl">
+                <div className="flex items-start gap-3">
+                    <Button variant="ghost" size="icon" onClick={() => navigate('/tests')} className="mt-1">
+                        <ArrowLeft size={24} />
+                    </Button>
+                    <div className="flex-1 min-w-0 space-y-3">
+                        <div className="space-y-2">
+                            {testCase.friendlyId && (
+                                <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded inline-block">
+                                    {testCase.friendlyId}
+                                </span>
+                            )}
+                            <h1 className="text-2xl font-bold break-words leading-tight">{testCase.title}</h1>
+                        </div>
+                        
+                        {/* Status and Priority Row */}
+                        <div className="flex flex-wrap items-center gap-2">
+                            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                                testCase.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                                testCase.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                                'bg-green-500/20 text-green-400 border border-green-500/30'
+                            }`}>
+                                {testCase.priority} Priority
+                            </span>
+                            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
+                                testCase.status === 'Pass' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                                testCase.status === 'Fail' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                                testCase.status === 'In Progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                                testCase.status === 'Draft' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' :
+                                'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                            }`}>
+                                {testCase.status}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    {canEditTestCases && (
+                        <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => {
+                                const tcId = (testCase as any)._id || testCase.id;
+                                navigate(`/tests/${tcId}/edit`);
+                            }}>
+                                <Edit size={20} />
+                            </Button>
+                            <button
+                                onClick={() => setShowDeleteModal(true)}
+                                className="p-2 hover:bg-red-500/20 rounded-lg transition-colors text-red-500"
+                                title="Delete test case"
+                            >
+                                <Trash2 size={20} />
+                            </button>
+                        </div>
                     )}
-                    <h1 className="text-xl font-bold break-words">{testCase.title}</h1>
                 </div>
-                {canEditTestCases && (
-                    <>
-                        <Button variant="ghost" size="icon" onClick={() => {
-                            const tcId = (testCase as any)._id || testCase.id;
-                            navigate(`/tests/${tcId}/edit`);
-                        }}>
-                            <Edit size={20} />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setShowDeleteModal(true)}
-                        >
-                            <Trash2 size={20} className="text-red-500" />
-                        </Button>
-                    </>
-                )}
             </div>
 
+            {/* Content Card */}
             <div className="glass-card p-6 rounded-2xl space-y-6">
-                <div className="flex items-center justify-between">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${testCase.priority === 'High' ? 'bg-red-500/10 text-red-500' :
-                        testCase.priority === 'Medium' ? 'bg-yellow-500/10 text-yellow-500' :
-                            'bg-green-500/10 text-green-500'
-                        }`}>
-                        {testCase.priority} Priority
-                    </span>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        testCase.status === 'Pass' ? 'bg-green-500/10 text-green-500' :
-                        testCase.status === 'Fail' ? 'bg-red-500/10 text-red-500' :
-                        testCase.status === 'In Progress' ? 'bg-blue-500/10 text-blue-500' :
-                        testCase.status === 'Draft' ? 'bg-gray-500/10 text-gray-400' :
-                        'bg-slate-500/10 text-slate-500'
-                    }`}>
-                        {testCase.status}
-                    </span>
-                </div>
-
                 {testCase.tags && testCase.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 pb-4 border-b border-white/5">
                         {testCase.tags.map(tag => (
-                            <span key={tag} className="px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium border border-primary/20">
+                            <span key={tag} className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-sm font-medium border border-primary/20">
                                 {tag}
                             </span>
                         ))}
                     </div>
                 )}
 
-                <div className="space-y-2">
-                    <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Description</h3>
-                    <p>{testCase.description || 'No description provided.'}</p>
+                <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Description</h3>
+                    <p className="text-base leading-relaxed">{testCase.description || 'No description provided.'}</p>
                 </div>
 
                 {testCase.preconditions && (
-                    <div className="space-y-2">
-                        <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Preconditions</h3>
-                        <p className="whitespace-pre-wrap">{testCase.preconditions}</p>
+                    <div className="space-y-3">
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Preconditions</h3>
+                        <div className="bg-blue-500/5 p-5 rounded-xl border border-blue-500/20">
+                            <p className="whitespace-pre-wrap leading-relaxed">{testCase.preconditions}</p>
+                        </div>
                     </div>
                 )}
 
-                <div className="space-y-2">
-                    <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Steps</h3>
-                    <div className="bg-slate-900/50 p-4 rounded-xl border border-white/5">
+                <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Steps</h3>
+                    <div className="bg-slate-900/50 p-5 rounded-xl border border-white/10">
                         <div 
-                            className="whitespace-pre-wrap font-mono text-sm"
+                            className="whitespace-pre-wrap font-mono text-sm leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: formatListText(testCase.steps) }}
                         />
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider">Expected Result</h3>
-                    <div className="bg-green-500/5 p-4 rounded-xl border border-green-500/10">
-                        <p className="whitespace-pre-wrap text-sm">{testCase.expectedResult}</p>
+                <div className="space-y-3">
+                    <h3 className="font-semibold text-sm uppercase tracking-wide text-green-400 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        Expected Result
+                    </h3>
+                    <div className="bg-green-500/5 p-5 rounded-xl border border-green-500/20">
+                        <p className="whitespace-pre-wrap leading-relaxed">{testCase.expectedResult}</p>
                     </div>
                 </div>
 
