@@ -25,7 +25,7 @@ const ProtectedRoute = () => {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
   if (!user) {
-    return <Navigate to="/role-select" replace />;
+    return <Navigate to="/login" replace />;
   }
   return <Layout />;
 };
