@@ -22,6 +22,7 @@ interface AuthContextType {
     createPreference: 'test' | 'bug' | 'both';
     updateCreatePreference: (pref: 'test' | 'bug' | 'both') => void;
     updatePassword: (current: string, newPass: string) => Promise<boolean>;
+    updateProfile: (name: string, username: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (storedPref) {
             setCreatePreference(storedPref as any);
         }
-        
+
         setLoading(false);
     }, []);
 
@@ -106,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const updatePassword = async (current: string, newPass: string): Promise<boolean> => {
         try {
-            await api.post('/auth/update-password', { currentPassword: current, newPassword: newPass });
+            await api.put('/auth/password', { currentPassword: current, newPassword: newPass });
             return true;
         } catch (err) {
             console.error(err);
@@ -114,8 +115,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const updateProfile = async (name: string, username: string): Promise<{ success: boolean; error?: string }> => {
+        try {
+            const res = await api.put('/auth/profile', { name, username });
+            const updatedUser = { ...user, ...res.data.user };
+            setUser(updatedUser);
+            localStorage.setItem('qa-share-user', JSON.stringify(updatedUser));
+            return { success: true };
+        } catch (err: any) {
+            console.error(err);
+            return { success: false, error: err.response?.data?.message || 'Failed to update profile' };
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, quickLogin, createPreference, updateCreatePreference, updatePassword }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, quickLogin, createPreference, updateCreatePreference, updatePassword, updateProfile }}>
             {children}
         </AuthContext.Provider>
     );

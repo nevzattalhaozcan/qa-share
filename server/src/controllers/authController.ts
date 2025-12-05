@@ -110,3 +110,43 @@ export const updatePassword = async (req: Request, res: Response) => {
         res.status(500).send('Server Error');
     }
 };
+
+export const updateProfile = async (req: Request, res: Response) => {
+    try {
+        const { name, username } = req.body;
+        // @ts-ignore
+        const userId = req.user.user.id;
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Check if new username is already taken by another user
+        if (username && username !== user.username) {
+            const existingUser = await User.findOne({ username });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Username already taken' });
+            }
+            user.username = username;
+        }
+
+        if (name) {
+            user.name = name;
+        }
+
+        await user.save();
+
+        res.json({
+            user: {
+                id: user.id,
+                name: user.name,
+                username: user.username,
+                role: user.role
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
