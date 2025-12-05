@@ -31,7 +31,7 @@ const linkifyText = (text: string) => {
 };
 
 export default function Notes() {
-    const { notes, addNote, updateNote, deleteNote } = useData();
+    const { notes, addNote, updateNote, deleteNote, activeProjectId } = useData();
     const { user } = useAuth();
     const [type, setType] = useState<'simple' | 'kv'>('simple');
     const [content, setContent] = useState('');
@@ -54,8 +54,9 @@ export default function Notes() {
 
     const handleAddNote = (e: React.FormEvent) => {
         e.preventDefault();
-        if (content.trim()) {
+        if (content.trim() && activeProjectId) {
             addNote({
+                projectId: activeProjectId,
                 type,
                 content: content.trim(),
                 label: type === 'kv' ? label.trim() : undefined

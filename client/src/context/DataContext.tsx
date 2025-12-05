@@ -67,6 +67,7 @@ export interface Bug {
 
 export interface Note {
     id: string;
+    projectId: string;
     type: 'simple' | 'kv';
     label?: string; // Key for KV
     content: string; // Value or Simple text
@@ -147,19 +148,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
     const fetchData = async () => {
         try {
-            const [projectsRes, testsRes, bugsRes, notesRes, notificationsRes] = await Promise.all([
+            const [projectsRes, testsRes, bugsRes, notificationsRes] = await Promise.all([
                 api.get('/projects'),
                 api.get('/tests'),
                 api.get('/bugs'),
-                api.get('/notes'),
                 api.get('/notifications'),
-                Promise.resolve({ data: [] })
             ]);
 
             setProjects(projectsRes.data);
             setTestCases(testsRes.data);
             setBugs(bugsRes.data);
-            setNotes(notesRes.data);
             setNotifications(notificationsRes.data);
 
             // Active Project - only set if not already set from localStorage
@@ -180,6 +178,24 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             fetchData();
         }
     }, []);
+
+    // Fetch notes when active project changes
+    useEffect(() => {
+        const fetchProjectNotes = async () => {
+            if (activeProjectId) {
+                try {
+                    const res = await api.get(`/notes?projectId=${activeProjectId}`);
+                    setNotes(res.data);
+                } catch (err) {
+                    console.error('Error fetching notes:', err);
+                }
+            } else {
+                setNotes([]);
+            }
+        };
+        
+        fetchProjectNotes();
+    }, [activeProjectId]);
 
     // We don't need save* functions anymore, we call API directly in add/update functions
 

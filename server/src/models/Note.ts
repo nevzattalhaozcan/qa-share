@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const noteSchema = new mongoose.Schema({
+    projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
     type: { type: String, enum: ['simple', 'kv'], required: true },
     label: { type: String },
     content: { type: String, required: true },

@@ -3,7 +3,9 @@ import { Note } from '../models/Note';
 
 export const getNotes = async (req: Request, res: Response) => {
     try {
-        const notes = await Note.find().sort({ createdAt: -1 });
+        const { projectId } = req.query;
+        const filter = projectId ? { projectId } : {};
+        const notes = await Note.find(filter).sort({ createdAt: -1 });
         res.json(notes);
     } catch (err) {
         console.error(err);
