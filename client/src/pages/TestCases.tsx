@@ -21,6 +21,7 @@ export default function TestCases() {
     const [filters, setFilters] = useState({
         status: [] as string[],
         priority: [] as string[],
+        tags: [] as string[],
     });
 
     const projectTestCases = testCases.filter(t => String(t.projectId) === String(activeProjectId));
@@ -47,7 +48,7 @@ export default function TestCases() {
         await updateTestCaseStatus(testId, 'Todo');
     };
 
-    const toggleFilter = (type: 'status' | 'priority', value: string) => {
+    const toggleFilter = (type: 'status' | 'priority' | 'tags', value: string) => {
         setFilters(prev => ({
             ...prev,
             [type]: prev[type].includes(value)
@@ -66,6 +67,12 @@ export default function TestCases() {
         }
         if (filters.priority.length > 0 && !filters.priority.includes(test.priority)) {
             return false;
+        }
+        if (filters.tags.length > 0) {
+            const testTags = test.tags || [];
+            if (!filters.tags.some(tag => testTags.includes(tag))) {
+                return false;
+            }
         }
         return true;
     });
@@ -86,7 +93,7 @@ export default function TestCases() {
                     <button
                         onClick={() => setShowFilters(!showFilters)}
                         className={`p-2 rounded-full transition-colors ${
-                            showFilters || filters.status.length > 0 || filters.priority.length > 0
+                            showFilters || filters.status.length > 0 || filters.priority.length > 0 || filters.tags.length > 0
                                 ? 'bg-primary/20 text-primary'
                                 : 'bg-primary/10 text-primary hover:bg-primary/20'
                         }`}
@@ -141,6 +148,24 @@ export default function TestCases() {
                                     }`}
                                 >
                                     {priority}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-semibold mb-2">Tags</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {['ui', 'backend', 'db', 'mobile', 'web'].map(tag => (
+                                <button
+                                    key={tag}
+                                    onClick={() => toggleFilter('tags', tag)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                        filters.tags.includes(tag)
+                                            ? 'bg-primary/20 text-primary border-2 border-primary'
+                                            : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+                                    }`}
+                                >
+                                    {tag}
                                 </button>
                             ))}
                         </div>

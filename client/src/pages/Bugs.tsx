@@ -12,11 +12,12 @@ export default function Bugs() {
     const [filters, setFilters] = useState({
         status: [] as string[],
         severity: [] as string[],
+        tags: [] as string[],
     });
 
     const projectBugs = bugs.filter(b => String(b.projectId) === String(activeProjectId));
 
-    const toggleFilter = (type: 'status' | 'severity', value: string) => {
+    const toggleFilter = (type: 'status' | 'severity' | 'tags', value: string) => {
         setFilters(prev => ({
             ...prev,
             [type]: prev[type].includes(value)
@@ -31,6 +32,12 @@ export default function Bugs() {
         }
         if (filters.severity.length > 0 && !filters.severity.includes(bug.severity)) {
             return false;
+        }
+        if (filters.tags.length > 0) {
+            const bugTags = bug.tags || [];
+            if (!filters.tags.some(tag => bugTags.includes(tag))) {
+                return false;
+            }
         }
         return true;
     });
@@ -50,7 +57,7 @@ export default function Bugs() {
                     <button
                         onClick={() => setShowFilters(!showFilters)}
                         className={`p-2 rounded-full transition-colors ${
-                            showFilters || filters.status.length > 0 || filters.severity.length > 0
+                            showFilters || filters.status.length > 0 || filters.severity.length > 0 || filters.tags.length > 0
                                 ? 'bg-primary/20 text-primary'
                                 : 'bg-primary/10 text-primary hover:bg-primary/20'
                         }`}
@@ -110,14 +117,32 @@ export default function Bugs() {
                             ))}
                         </div>
                     </div>
+                    <div>
+                        <h3 className="text-sm font-semibold mb-2">Tags</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {['ui', 'backend', 'db', 'mobile', 'web'].map(tag => (
+                                <button
+                                    key={tag}
+                                    onClick={() => toggleFilter('tags', tag)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                        filters.tags.includes(tag)
+                                            ? 'bg-primary/20 text-primary border-2 border-primary'
+                                            : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+                                    }`}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
                 </div>
             )}
 
             <div className="space-y-4">
                 {filteredBugs.length === 0 ? (
                     <div className="text-center py-12 text-muted-foreground">
-                        <p>No bugs {filters.status.length > 0 || filters.severity.length > 0 ? 'match the filters' : 'reported'}.</p>
-                        {filters.status.length === 0 && filters.severity.length === 0 && (
+                        <p>No bugs {filters.status.length > 0 || filters.severity.length > 0 || filters.tags.length > 0 ? 'match the filters' : 'reported'}.</p>
+                        {filters.status.length === 0 && filters.severity.length === 0 && filters.tags.length === 0 && (
                             <p className="text-sm">Good job! Or maybe you haven't tested enough? 😉</p>
                         )}
                     </div>
