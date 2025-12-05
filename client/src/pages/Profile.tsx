@@ -94,19 +94,15 @@ export default function Profile() {
                     <p className="text-muted-foreground">{user?.role}</p>
                     {user?.username && <p className="text-sm text-muted-foreground">@{user.username}</p>}
                 </div>
-                {(() => {
-                    const currentUserId = (user as any)?._id || user?.id || '';
-                    const isDemoUser = currentUserId.startsWith('673ffa1234567890abcdef0');
-                    return !isDemoUser && !isEditingProfile && (
-                        <button
-                            onClick={() => setIsEditingProfile(true)}
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white"
-                            title="Edit Profile"
-                        >
-                            <Edit2 size={20} />
-                        </button>
-                    );
-                })()}
+                {!isEditingProfile && (
+                    <button
+                        onClick={() => setIsEditingProfile(true)}
+                        className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white"
+                        title="Edit Profile"
+                    >
+                        <Edit2 size={20} />
+                    </button>
+                )}
             </div>
 
             {/* Edit Profile Section */}
@@ -169,54 +165,48 @@ export default function Profile() {
                 </div>
             )}
 
-            {/* Only show password change for non-demo users */}
-            {(() => {
-                const currentUserId = (user as any)?._id || user?.id || '';
-                const isDemoUser = currentUserId.startsWith('673ffa1234567890abcdef0');
-                return !isDemoUser && (
-                    <div className="glass-card p-4 rounded-xl space-y-4">
-                        <h3 className="font-semibold flex items-center gap-2">
-                            <Lock size={18} />
-                            Change Password
-                        </h3>
+            {/* Password change section */}
+            <div className="glass-card p-4 rounded-xl space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                    <Lock size={18} />
+                    Change Password
+                </h3>
 
-                        <div className="space-y-3">
-                            <Input
-                                type="password"
-                                placeholder="Current Password"
-                                value={currentPassword}
-                                onChange={(e) => setCurrentPassword(e.target.value)}
-                            />
-                            <Input
-                                type="password"
-                                placeholder="New Password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                            />
-                            <Input
-                                type="password"
-                                placeholder="Confirm New Password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                            />
+                <div className="space-y-3">
+                    <Input
+                        type="password"
+                        placeholder="Current Password"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                    />
+                    <Input
+                        type="password"
+                        placeholder="New Password"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                    <Input
+                        type="password"
+                        placeholder="Confirm New Password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                    />
 
-                            {passwordMessage && (
-                                <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                                    {passwordMessage.text}
-                                </p>
-                            )}
+                    {passwordMessage && (
+                        <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                            {passwordMessage.text}
+                        </p>
+                    )}
 
-                            <Button
-                                onClick={handlePasswordChange}
-                                className="w-full"
-                                disabled={!currentPassword || !newPassword || !confirmPassword}
-                            >
-                                Update Password
-                            </Button>
-                        </div>
-                    </div>
-                );
-            })()}
+                    <Button
+                        onClick={handlePasswordChange}
+                        className="w-full"
+                        disabled={!currentPassword || !newPassword || !confirmPassword}
+                    >
+                        Update Password
+                    </Button>
+                </div>
+            </div>
 
             <div className="glass-card p-4 rounded-xl space-y-4">
                 <h3 className="font-semibold">Settings</h3>
