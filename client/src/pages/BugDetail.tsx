@@ -1,15 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { ArrowLeft, Link as LinkIcon, FileText, Trash2, Edit, X } from 'lucide-react';
+import { ArrowLeft, Link as LinkIcon, FileText, Trash2, Edit, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
 import LinkSelector from '../components/LinkSelector';
 import StatusDropdown from '../components/StatusDropdown';
 import CommentSection from '../components/CommentSection';
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { formatListText } from '../lib/utils';
 
 export default function BugDetail() {
@@ -20,7 +20,7 @@ export default function BugDetail() {
     const { user } = useAuth();
     const [showLinkSelector, setShowLinkSelector] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [viewerAttachment, setViewerAttachment] = useState<{ url: string; type: 'image' | 'video' | 'file' } | null>(null);
+    const [viewerAttachment, setViewerAttachment] = useState<{ url: string; type: 'image' | 'video' | 'file'; index: number } | null>(null);
 
     const bug = bugs.find(b => b.id === id || (b as any)._id === id);
     
@@ -29,6 +29,63 @@ export default function BugDetail() {
     
     // Check if current user can link test cases (QA or bug creator)
     const canLinkTestCase = user?.role === 'QA' || bug?.createdBy === user?.id;
+
+    // Lock body scroll when viewer is open
+    useEffect(() => {
+        if (viewerAttachment) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [viewerAttachment]);
+
+    // Keyboard navigation for attachment viewer
+    useEffect(() => {
+        if (!viewerAttachment) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') {
+                handleSwipe('right'); // Previous
+            } else if (e.key === 'ArrowRight') {
+                handleSwipe('left'); // Next
+            } else if (e.key === 'Escape') {
+                setViewerAttachment(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [viewerAttachment]);
+
+    // Handle swipe navigation
+    const handleSwipe = (direction: 'left' | 'right') => {
+        if (!viewerAttachment || !bug) return;
+        
+        const attachments = bug.attachments || [];
+        const currentIndex = viewerAttachment.index;
+        
+        if (direction === 'right' && currentIndex > 0) {
+            // Previous attachment
+            const prevUrl = attachments[currentIndex - 1];
+            const type = getAttachmentType(prevUrl);
+            setViewerAttachment({ url: prevUrl, type, index: currentIndex - 1 });
+        } else if (direction === 'left' && currentIndex < attachments.length - 1) {
+            // Next attachment
+            const nextUrl = attachments[currentIndex + 1];
+            const type = getAttachmentType(nextUrl);
+            setViewerAttachment({ url: nextUrl, type, index: currentIndex + 1 });
+        }
+    };
+
+    const getAttachmentType = (url: string): 'image' | 'video' | 'file' => {
+        const ext = url.split('.').pop()?.toLowerCase() || '';
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return 'image';
+        if (['mp4', 'webm', 'mov'].includes(ext)) return 'video';
+        return 'file';
+    };
 
     if (!bug) {
         return (
@@ -163,7 +220,8 @@ export default function BugDetail() {
                                             className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/10 bg-slate-800/50 cursor-pointer hover:border-primary/50 transition-colors group flex-shrink-0"
                                             onClick={() => setViewerAttachment({ 
                                                 url, 
-                                                type: isImage ? 'image' : isVideo ? 'video' : 'file' 
+                                                type: isImage ? 'image' : isVideo ? 'video' : 'file',
+                                                index
                                             })}
                                         >
                                             {canEditBugs && (
@@ -317,33 +375,98 @@ export default function BugDetail() {
             {/* Attachment Viewer Modal */}
             <AnimatePresence>
                 {viewerAttachment && (
-                    <div 
-                        className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center"
                         onClick={() => setViewerAttachment(null)}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.2}
+                        onDragEnd={(e, { offset }) => {
+                            if (offset.x > 100) {
+                                handleSwipe('right'); // Swipe right = previous
+                            } else if (offset.x < -100) {
+                                handleSwipe('left'); // Swipe left = next
+                            }
+                        }}
                     >
+                        {/* Close Button */}
                         <button
-                            onClick={() => setViewerAttachment(null)}
-                            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setViewerAttachment(null);
+                            }}
+                            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-20"
                         >
                             <X size={24} />
                         </button>
+
+                        {/* Navigation Buttons */}
+                        {bug && bug.attachments && viewerAttachment.index > 0 && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSwipe('right');
+                                }}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-20"
+                            >
+                                <ChevronLeft size={32} />
+                            </button>
+                        )}
                         
-                        <div className="w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                        {bug && bug.attachments && viewerAttachment.index < bug.attachments.length - 1 && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSwipe('left');
+                                }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-20"
+                            >
+                                <ChevronRight size={32} />
+                            </button>
+                        )}
+
+                        {/* Attachment Counter */}
+                        {bug && bug.attachments && bug.attachments.length > 1 && (
+                            <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 bg-black/50 rounded-full text-sm z-20">
+                                {viewerAttachment.index + 1} / {bug.attachments.length}
+                            </div>
+                        )}
+                        
+                        <div className="w-full h-full flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
                             {viewerAttachment.type === 'image' ? (
-                                <img 
+                                <motion.img 
+                                    key={viewerAttachment.url}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{ duration: 0.2 }}
                                     src={viewerAttachment.url} 
                                     alt="Attachment" 
-                                    className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                                    className="max-w-full max-h-[90vh] object-contain rounded-lg"
                                 />
                             ) : viewerAttachment.type === 'video' ? (
-                                <video 
+                                <motion.video
+                                    key={viewerAttachment.url}
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{ duration: 0.2 }}
                                     src={viewerAttachment.url} 
                                     controls 
                                     autoPlay
-                                    className="max-w-full max-h-[80vh] rounded-lg"
+                                    className="max-w-full max-h-[90vh] rounded-lg"
                                 />
                             ) : (
-                                <div className="bg-slate-800 p-8 rounded-lg text-center">
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.9 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="bg-slate-800 p-8 rounded-lg text-center"
+                                >
                                     <FileText size={64} className="mx-auto mb-4 text-primary" />
                                     <p className="text-lg mb-4">File Preview Not Available</p>
                                     <a 
@@ -354,10 +477,10 @@ export default function BugDetail() {
                                     >
                                         Download File
                                     </a>
-                                </div>
+                                </motion.div>
                             )}
                         </div>
-                    </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
         </div>
