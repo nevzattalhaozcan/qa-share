@@ -1,0 +1,187 @@
+import { useState } from 'react';
+import { useData } from '../context/DataContext';
+import { Button } from './ui/Button';
+import { Input } from './ui/Input';
+import { Copy, Share2, Trash2, Plus, Check, Key } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// Helper function to convert URLs to clickable links
+const linkifyText = (text: string) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+        if (part.match(urlRegex)) {
+            return (
+                <a
+                    key={index}
+                    href={part}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:text-primary/80 underline"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {part}
+                </a>
+            );
+        }
+        return part;
+    });
+};
+
+export default function Notes() {
+    const { notes, addNote, deleteNote } = useData();
+    const [type, setType] = useState<'simple' | 'kv'>('simple');
+    const [content, setContent] = useState('');
+    const [label, setLabel] = useState('');
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    const handleAddNote = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (content.trim()) {
+            addNote({
+                type,
+                content: content.trim(),
+                label: type === 'kv' ? label.trim() : undefined
+            });
+            setContent('');
+            setLabel('');
+        }
+    };
+
+    const handleCopy = async (id: string, text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedId(id);
+            setTimeout(() => setCopiedId(null), 2000);
+        } catch (err) {
+            console.error('Failed to copy:', err);
+        }
+    };
+
+    const handleShare = async (text: string) => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'QA Note',
+                    text: text,
+                });
+            } catch (err) {
+                console.error('Error sharing:', err);
+            }
+        } else {
+            // Fallback to copy if share not supported
+            handleCopy('share-fallback', text);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <div className="flex gap-2 p-1 bg-slate-800/50 rounded-lg w-fit">
+                <button
+                    onClick={() => setType('simple')}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${type === 'simple' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-white'
+                        }`}
+                >
+                    Simple
+                </button>
+                <button
+                    onClick={() => setType('kv')}
+                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${type === 'kv' ? 'bg-primary text-white' : 'text-muted-foreground hover:text-white'
+                        }`}
+                >
+                    Key / Value
+                </button>
+            </div>
+
+            <form onSubmit={handleAddNote} className="flex flex-col gap-2">
+                {type === 'kv' && (
+                    <Input
+                        value={label}
+                        onChange={(e) => setLabel(e.target.value)}
+                        placeholder="Key (e.g., Username, Env)..."
+                    />
+                )}
+                <div className="flex gap-2">
+                    <Input
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        placeholder={type === 'kv' ? "Value (e.g., Password, Secret)..." : "Add a quick note (e.g., Test Account: user/pass)..."}
+                        className="flex-1"
+                    />
+                    <Button type="submit" size="icon" disabled={!content.trim() || (type === 'kv' && !label.trim())}>
+                        <Plus size={20} />
+                    </Button>
+                </div>
+            </form>
+
+            <div className="space-y-3">
+                <AnimatePresence mode="popLayout">
+                    {notes.map((note) => {
+                        const noteId = (note as any)._id || note.id;
+                        const textToCopy = note.type === 'kv' ? `${note.label}: ${note.content}` : note.content;
+
+                        return (
+                            <motion.div
+                                key={noteId}
+                                layout
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="glass-card p-3 rounded-xl flex items-start justify-between gap-3 group"
+                            >
+                                <div className="flex-1 pt-1 min-w-0">
+                                    {note.type === 'kv' && (
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Key size={12} className="text-primary" />
+                                            <span className="text-xs font-bold text-muted-foreground tracking-wider">
+                                                {note.label}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <p className="text-sm whitespace-pre-wrap font-mono text-slate-300 break-all">
+                                        {linkifyText(note.content)}
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                    <button
+                                        onClick={() => handleCopy(noteId, textToCopy)}
+                                        className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white"
+                                        title="Copy"
+                                    >
+                                        {copiedId === noteId ? (
+                                            <Check size={16} className="text-green-400" />
+                                        ) : (
+                                            <Copy size={16} />
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={() => handleShare(textToCopy)}
+                                        className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white"
+                                        title="Share"
+                                    >
+                                        <Share2 size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => deleteNote(noteId)}
+                                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors text-slate-400 hover:text-red-400"
+                                        title="Delete"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )
+                    })}
+                </AnimatePresence>
+
+                {notes.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground text-sm">
+                        No notes yet. Add one above!
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
