@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
-import { Plus, Users, Bug, ListTodo, Settings, AlertTriangle, Clock } from 'lucide-react';
+import { Plus, Users, Bug, ListTodo, Settings, AlertTriangle, Clock, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import TeamMembersModal from '../components/TeamMembersModal';
 
 export default function Home() {
     const { projects, activeProjectId, setActiveProjectId, testCases, bugs } = useData();
     const { user } = useAuth();
     const navigate = useNavigate();
+    const [selectedProjectForMembers, setSelectedProjectForMembers] = useState<string | null>(null);
 
     const userId = user ? ((user as any)._id || user.id) : null;
     const userProjects = projects.filter(p => {
@@ -38,7 +41,7 @@ export default function Home() {
     const isBugStale = (bug: typeof bugs[0]) => {
         // Only show warning for bugs with "Opened" status
         if (bug.status !== 'Opened') return false;
-        
+
         const threeDaysAgo = new Date();
         threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
         return new Date(bug.createdAt) < threeDaysAgo;
@@ -48,7 +51,7 @@ export default function Home() {
     const isTestCaseStale = (testCase: typeof testCases[0]) => {
         // Only show warning for test cases with "Todo" or "Draft" status
         if (testCase.status !== 'Todo' && testCase.status !== 'Draft') return false;
-        
+
         const threeDaysAgo = new Date();
         threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
         return new Date(testCase.createdAt) < threeDaysAgo;
@@ -57,13 +60,13 @@ export default function Home() {
     // Get recent bugs for DEV user (last 5, sorted by newest)
     const getRecentBugs = () => {
         if (user?.role !== 'DEV') return [];
-        
+
         // Get bugs from active project only
-        const projectBugs = bugs.filter(b => 
+        const projectBugs = bugs.filter(b =>
             String(b.projectId) === String(activeProjectId) &&
             b.status !== 'Closed'
         );
-        
+
         // Sort by creation date (newest first) and take first 5
         return projectBugs
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -73,12 +76,12 @@ export default function Home() {
     // Get recent test cases for QA user (last 3, sorted by newest)
     const getRecentTestCases = () => {
         if (user?.role !== 'QA') return [];
-        
+
         // Get test cases from active project only
-        const projectTestCases = testCases.filter(t => 
+        const projectTestCases = testCases.filter(t =>
             String(t.projectId) === String(activeProjectId)
         );
-        
+
         // Sort by creation date (newest first) and take first 3
         return projectTestCases
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -88,13 +91,13 @@ export default function Home() {
     // Get recently fixed bugs for QA user (last 3, sorted by newest)
     const getRecentlyFixedBugs = () => {
         if (user?.role !== 'QA') return [];
-        
+
         // Get fixed bugs from active project only
-        const fixedBugs = bugs.filter(b => 
+        const fixedBugs = bugs.filter(b =>
             String(b.projectId) === String(activeProjectId) &&
             b.status === 'Fixed'
         );
-        
+
         // Sort by creation date (newest first) and take first 3
         return fixedBugs
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -199,18 +202,18 @@ export default function Home() {
                                                 <Settings size={18} />
                                             </button>
                                         )}
-                                        {/* Team members chevron button - commented out for future use
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedProjectForMembers(projectId);
-                                            }}
-                                            className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white"
-                                            title="View Team Members"
-                                        >
-                                            <ChevronRight size={20} />
-                                        </button>
-                                        */}
+                                        {user?.role === 'QA' && (
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedProjectForMembers(projectId);
+                                                }}
+                                                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white"
+                                                title="View Team Members"
+                                            >
+                                                <ChevronRight size={20} />
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -267,11 +270,10 @@ export default function Home() {
                                             </div>
                                             <h3 className="font-semibold text-base truncate">{testCase.title}</h3>
                                         </div>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            testCase.priority === 'High' ? 'bg-red-500/20 text-red-500' :
-                                            testCase.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-500' :
-                                            'bg-blue-500/10 text-blue-500'
-                                        }`}>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${testCase.priority === 'High' ? 'bg-red-500/20 text-red-500' :
+                                                testCase.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-500' :
+                                                    'bg-blue-500/10 text-blue-500'
+                                            }`}>
                                             {testCase.priority}
                                         </span>
                                     </div>
@@ -390,12 +392,11 @@ export default function Home() {
                                             </div>
                                             <h3 className="font-semibold text-base truncate">{bug.title}</h3>
                                         </div>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                            bug.severity === 'Critical' ? 'bg-red-500/20 text-red-500' :
-                                            bug.severity === 'High' ? 'bg-orange-500/20 text-orange-500' :
-                                            bug.severity === 'Medium' ? 'bg-yellow-500/20 text-yellow-500' :
-                                            'bg-blue-500/10 text-blue-500'
-                                        }`}>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${bug.severity === 'Critical' ? 'bg-red-500/20 text-red-500' :
+                                                bug.severity === 'High' ? 'bg-orange-500/20 text-orange-500' :
+                                                    bug.severity === 'Medium' ? 'bg-yellow-500/20 text-yellow-500' :
+                                                        'bg-blue-500/10 text-blue-500'
+                                            }`}>
                                             {bug.severity}
                                         </span>
                                     </div>
@@ -410,18 +411,21 @@ export default function Home() {
                 </div>
             )}
 
-            {/* Team Members Modal - commented out for future use
-            {selectedProject && (
-                <TeamMembersModal
-                    projectId={getProjectId(selectedProject)}
-                    projectName={selectedProject.name}
-                    members={selectedProject.members}
-                    createdBy={selectedProject.createdBy}
-                    isOpen={!!selectedProjectForMembers}
-                    onClose={() => setSelectedProjectForMembers(null)}
-                />
-            )}
-            */}
+            {/* Team Members Modal */}
+            {selectedProjectForMembers && (() => {
+                const selectedProject = userProjects.find(p => getProjectId(p) === selectedProjectForMembers);
+                if (!selectedProject) return null;
+                return (
+                    <TeamMembersModal
+                        projectId={getProjectId(selectedProject)}
+                        projectName={selectedProject.name}
+                        members={selectedProject.members}
+                        createdBy={selectedProject.createdBy}
+                        isOpen={!!selectedProjectForMembers}
+                        onClose={() => setSelectedProjectForMembers(null)}
+                    />
+                );
+            })()}
         </div>
     );
 }

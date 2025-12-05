@@ -6,7 +6,6 @@ import { Modal } from './ui/Modal';
 import { Input } from './ui/Input';
 import { useData, type TeamMember } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { generatePassword } from '../lib/password';
 
 interface TeamMembersModalProps {
     projectId: string;
@@ -34,12 +33,12 @@ export default function TeamMembersModal({
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
 
     const userId = user ? ((user as any)._id || user.id) : null;
-    const isFounder = String(userId) === String(createdBy);
+    const isQA = user?.role === 'QA';
 
     const handleAdd = async () => {
         if (!username.trim() || !name.trim()) return;
 
-        const password = generatePassword(8);
+        const password = '123456';
 
         const newMember: TeamMember = {
             id: Math.random().toString(36).substr(2, 9),
@@ -50,7 +49,7 @@ export default function TeamMembersModal({
         };
 
         const error = await addTeamMember(projectId, newMember);
-        
+
         if (error) {
             setErrorModal({ show: true, message: error });
             return;
@@ -151,7 +150,7 @@ export default function TeamMembersModal({
                             )}
 
                             {/* Add Member Form */}
-                            {isFounder && (
+                            {isQA && (
                                 <div className="space-y-3 p-4 rounded-xl bg-white/5 border border-white/10">
                                     <div className="flex items-center gap-2 text-sm font-medium">
                                         <UserPlus size={16} className="text-primary" />
@@ -226,7 +225,7 @@ export default function TeamMembersModal({
                                                         }`}>
                                                         {member.role}
                                                     </span>
-                                                    {isFounder && String(memberId) !== String(createdBy) && (
+                                                    {isQA && String((member as any).userId || memberId) !== String(userId) && (
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
@@ -248,7 +247,7 @@ export default function TeamMembersModal({
                     </motion.div>
                 </>
             )}
-            
+
             <Modal
                 isOpen={errorModal.show}
                 onClose={() => setErrorModal({ show: false, message: '' })}
