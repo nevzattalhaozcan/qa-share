@@ -3,7 +3,7 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff } from 'lucide-react';
+import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Helper function to convert URLs to clickable links
@@ -41,8 +41,9 @@ export default function Notes() {
     const isQA = user?.role === 'QA';
 
     // Sort notes: pinned first, then by creation date
+    // QA can see hidden notes, others can't
     const sortedNotes = [...notes]
-        .filter(note => !note.hidden) // Don't show hidden notes
+        .filter(note => isQA || !note.hidden) // QA sees all, others don't see hidden
         .sort((a, b) => {
             // Pinned notes come first
             if (a.pinned && !b.pinned) return -1;
@@ -94,8 +95,8 @@ export default function Notes() {
         await updateNote(id, { pinned: !currentPinned });
     };
 
-    const handleToggleHide = async (id: string) => {
-        await updateNote(id, { hidden: true });
+    const handleToggleHide = async (id: string, currentHidden: boolean) => {
+        await updateNote(id, { hidden: !currentHidden });
     };
 
     return (
@@ -153,6 +154,8 @@ export default function Notes() {
                                 exit={{ opacity: 0, scale: 0.9 }}
                                 className={`glass-card rounded-xl overflow-hidden ${
                                     note.pinned ? 'ring-2 ring-primary/30' : ''
+                                } ${
+                                    note.hidden ? 'opacity-50' : ''
                                 }`}
                             >
                                 {/* Note Header with actions */}
@@ -168,6 +171,11 @@ export default function Notes() {
                                         )}
                                         {note.type === 'simple' && (
                                             <span className="text-xs text-muted-foreground">Quick Note</span>
+                                        )}
+                                        {note.hidden && isQA && (
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded font-semibold uppercase tracking-wide">
+                                                Hidden
+                                            </span>
                                         )}
                                     </div>
                                     
@@ -202,11 +210,13 @@ export default function Notes() {
                                         </button>
                                         {isQA && (
                                             <button
-                                                onClick={() => handleToggleHide(noteId)}
-                                                className="p-1.5 hover:bg-yellow-500/20 rounded-md transition-colors text-slate-400 hover:text-yellow-400"
-                                                title="Hide note"
+                                                onClick={() => handleToggleHide(noteId, note.hidden || false)}
+                                                className={`p-1.5 hover:bg-yellow-500/20 rounded-md transition-colors ${
+                                                    note.hidden ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-400'
+                                                }`}
+                                                title={note.hidden ? 'Unhide note' : 'Hide note from DEV users'}
                                             >
-                                                <EyeOff size={14} />
+                                                {note.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
                                             </button>
                                         )}
                                         <button
