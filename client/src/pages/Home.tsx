@@ -14,11 +14,14 @@ export default function Home() {
     const [selectedProjectForMembers, setSelectedProjectForMembers] = useState<string | null>(null);
 
     const userId = user ? ((user as any)._id || user.id) : null;
+    const userUsername = user?.username;
     const userProjects = projects.filter(p => {
         const creatorId = String(p.createdBy);
         return creatorId === String(userId) || p.members.some(m => {
             const memberId = (m as any).userId || (m as any)._id || m.id;
-            return String(memberId) === String(userId);
+            // Check by userId first, then fallback to username match
+            return String(memberId) === String(userId) ||
+                (userUsername && m.username === userUsername);
         });
     });
 
