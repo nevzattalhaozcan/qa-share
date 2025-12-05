@@ -384,7 +384,7 @@ export default function BugDetail() {
                         drag="x"
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.2}
-                        onDragEnd={(e, { offset }) => {
+                        onDragEnd={(_e, { offset }) => {
                             if (offset.x > 100) {
                                 handleSwipe('right'); // Swipe right = previous
                             } else if (offset.x < -100) {
