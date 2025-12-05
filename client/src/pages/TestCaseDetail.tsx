@@ -77,7 +77,7 @@ export default function TestCaseDetail() {
                             {testCase.friendlyId}
                         </span>
                     )}
-                    <h1 className="text-xl font-bold truncate">{testCase.title}</h1>
+                    <h1 className="text-xl font-bold break-words">{testCase.title}</h1>
                 </div>
                 {canEditTestCases && (
                     <>

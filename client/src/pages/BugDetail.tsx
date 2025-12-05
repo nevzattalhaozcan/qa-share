@@ -120,7 +120,7 @@ export default function BugDetail() {
                             {bug.friendlyId}
                         </span>
                     )}
-                    <h1 className="text-xl font-bold truncate">{bug.title}</h1>
+                    <h1 className="text-xl font-bold break-words">{bug.title}</h1>
                 </div>
                 {canEditBugs && (
                     <Button variant="ghost" size="icon" onClick={() => {
