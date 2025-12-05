@@ -4,7 +4,6 @@ import { Button } from '../components/ui/Button';
 import { Plus, Users, Bug, ListTodo, Settings, AlertTriangle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
 
 export default function Home() {
     const { projects, activeProjectId, setActiveProjectId, testCases, bugs } = useData();
@@ -62,8 +61,7 @@ export default function Home() {
         // Get bugs from active project only
         const projectBugs = bugs.filter(b => 
             String(b.projectId) === String(activeProjectId) &&
-            b.status !== 'Closed' &&
-            b.status !== 'Rejected'
+            b.status !== 'Closed'
         );
         
         // Sort by creation date (newest first) and take first 5
