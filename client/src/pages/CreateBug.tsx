@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData, type Bug } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
@@ -18,7 +18,7 @@ import { AnimatePresence } from 'framer-motion';
 
 export default function CreateBug() {
     const navigate = useNavigate();
-    const { addBug, activeProjectId, testCases, linkItems } = useData();
+    const { addBug, activeProjectId, testCases } = useData();
     const { user } = useAuth();
     const { canCreateBugs, canEditTestCases } = usePermissions();
     const { handleKeyDown } = useListAutoFormat();
@@ -55,14 +55,14 @@ export default function CreateBug() {
 
     // Track if any field has been filled
     useEffect(() => {
-        const hasContent = formData.title || formData.description || formData.stepsToReproduce || 
+        const hasContent = !!(formData.title || formData.description || formData.stepsToReproduce || 
                           formData.expectedResult || formData.actualResult ||
-                          formData.tags.length > 0 || formData.attachments.length > 0;
+                          formData.tags.length > 0 || formData.attachments.length > 0);
         setHasUnsavedChanges(hasContent);
     }, [formData]);
 
     // Use unsaved changes hook
-    const { isBlocked, blocker, proceedNavigation, resetNavigation } = useUnsavedChanges({
+    const { resetNavigation } = useUnsavedChanges({
         hasUnsavedChanges,
         onNavigateAway: () => setShowDraftModal(true),
     });
@@ -128,7 +128,7 @@ export default function CreateBug() {
             return;
         }
 
-        const newBug = await addBug({
+        await addBug({
             ...formData,
             status: 'Draft',
             linkedTestCaseIds: linkedTestIds,
@@ -339,6 +339,7 @@ export default function CreateBug() {
                 message="You have unsaved changes. Would you like to save this as a draft before leaving?"
                 type="warning"
                 onConfirm={handleSaveAsDraft}
+                onCancel={handleDiscard}
                 confirmText="Save as Draft"
                 cancelText="Discard"
             />

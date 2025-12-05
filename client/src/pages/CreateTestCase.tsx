@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData, type TestCase } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
@@ -17,7 +17,7 @@ import { Link as LinkIcon } from 'lucide-react';
 
 export default function CreateTestCase() {
     const navigate = useNavigate();
-    const { addTestCase, activeProjectId, bugs, linkItems } = useData();
+    const { addTestCase, activeProjectId, bugs } = useData();
     const { user } = useAuth();
     const { canCreateTestCases } = usePermissions();
     const { handleKeyDown } = useListAutoFormat();
@@ -52,12 +52,12 @@ export default function CreateTestCase() {
 
     // Track if any field has been filled
     useEffect(() => {
-        const hasContent = formData.title || formData.description || formData.preconditions || 
-                          formData.steps || formData.expectedResult || formData.tags.length > 0;
+        const hasContent = !!(formData.title || formData.description || formData.preconditions || 
+                          formData.steps || formData.expectedResult || formData.tags.length > 0);
         setHasUnsavedChanges(hasContent);
     }, [formData]);
 
-    const { blocker, proceedNavigation, resetNavigation } = useUnsavedChanges({
+    const { resetNavigation } = useUnsavedChanges({
         hasUnsavedChanges,
         onNavigateAway: () => setShowDraftModal(true),
     });
@@ -282,6 +282,7 @@ export default function CreateTestCase() {
                 message="You have unsaved changes. Would you like to save this as a draft before leaving?"
                 type="warning"
                 onConfirm={handleSaveAsDraft}
+                onCancel={handleDiscard}
                 confirmText="Save as Draft"
                 cancelText="Discard"
             />
