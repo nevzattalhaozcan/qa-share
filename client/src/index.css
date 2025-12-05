@@ -78,6 +78,10 @@
     @apply border-border;
   }
 
+  html {
+    @apply bg-slate-900;
+  }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -106,4 +110,24 @@ select option {
   background-color: hsl(222 47% 11%);
   color: hsl(210 40% 98%);
   padding: 0.5rem;
+}
+
+/* Force dark mode in Chrome */
+@media (prefers-color-scheme: light) {
+  html {
+    color-scheme: dark;
+  }
+}
+
+/* Override Chrome autofill background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+button:-webkit-autofill,
+button:-webkit-autofill:hover,
+button:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 30px hsl(222 47% 11%) inset !important;
+  -webkit-text-fill-color: hsl(210 40% 98%) !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
