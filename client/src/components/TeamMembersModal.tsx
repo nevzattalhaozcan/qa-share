@@ -11,7 +11,6 @@ interface TeamMembersModalProps {
     projectId: string;
     projectName: string;
     members: TeamMember[];
-    createdBy: string;
     isOpen: boolean;
     onClose: () => void;
 }
@@ -20,7 +19,6 @@ export default function TeamMembersModal({
     projectId,
     projectName,
     members,
-    createdBy,
     isOpen,
     onClose
 }: TeamMembersModalProps) {

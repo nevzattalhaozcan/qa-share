@@ -271,8 +271,8 @@ export default function Home() {
                                             <h3 className="font-semibold text-base truncate">{testCase.title}</h3>
                                         </div>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${testCase.priority === 'High' ? 'bg-red-500/20 text-red-500' :
-                                                testCase.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-500' :
-                                                    'bg-blue-500/10 text-blue-500'
+                                            testCase.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-500' :
+                                                'bg-blue-500/10 text-blue-500'
                                             }`}>
                                             {testCase.priority}
                                         </span>
@@ -393,9 +393,9 @@ export default function Home() {
                                             <h3 className="font-semibold text-base truncate">{bug.title}</h3>
                                         </div>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${bug.severity === 'Critical' ? 'bg-red-500/20 text-red-500' :
-                                                bug.severity === 'High' ? 'bg-orange-500/20 text-orange-500' :
-                                                    bug.severity === 'Medium' ? 'bg-yellow-500/20 text-yellow-500' :
-                                                        'bg-blue-500/10 text-blue-500'
+                                            bug.severity === 'High' ? 'bg-orange-500/20 text-orange-500' :
+                                                bug.severity === 'Medium' ? 'bg-yellow-500/20 text-yellow-500' :
+                                                    'bg-blue-500/10 text-blue-500'
                                             }`}>
                                             {bug.severity}
                                         </span>
@@ -420,7 +420,6 @@ export default function Home() {
                         projectId={getProjectId(selectedProject)}
                         projectName={selectedProject.name}
                         members={selectedProject.members}
-                        createdBy={selectedProject.createdBy}
                         isOpen={!!selectedProjectForMembers}
                         onClose={() => setSelectedProjectForMembers(null)}
                     />
