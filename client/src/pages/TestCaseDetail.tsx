@@ -69,42 +69,11 @@ export default function TestCaseDetail() {
         <div className="space-y-4 pb-20">
             {/* Header */}
             <div className="glass-card p-4 rounded-2xl">
-                <div className="flex items-start gap-3">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/tests')} className="mt-1">
+                {/* Top Row - Action Buttons */}
+                <div className="flex items-center justify-between mb-4">
+                    <Button variant="ghost" size="icon" onClick={() => navigate('/tests')}>
                         <ArrowLeft size={24} />
                     </Button>
-                    <div className="flex-1 min-w-0 space-y-3">
-                        <div className="space-y-2">
-                            {testCase.friendlyId && (
-                                <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded inline-block">
-                                    {testCase.friendlyId}
-                                </span>
-                            )}
-                            <h1 className="text-2xl font-bold break-words leading-tight">{testCase.title}</h1>
-                        </div>
-                        
-                        {/* Status and Priority Row */}
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                                testCase.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                                testCase.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                                'bg-green-500/20 text-green-400 border border-green-500/30'
-                            }`}>
-                                {testCase.priority} Priority
-                            </span>
-                            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
-                                testCase.status === 'Pass' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                                testCase.status === 'Fail' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-                                testCase.status === 'In Progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                                testCase.status === 'Draft' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' :
-                                'bg-slate-500/20 text-slate-400 border-slate-500/30'
-                            }`}>
-                                {testCase.status}
-                            </span>
-                        </div>
-                    </div>
-                    
-                    {/* Action Buttons */}
                     {canEditTestCases && (
                         <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" onClick={() => {
@@ -122,6 +91,36 @@ export default function TestCaseDetail() {
                             </button>
                         </div>
                     )}
+                </div>
+                
+                {/* Middle - ID and Title */}
+                <div className="space-y-2 mb-4">
+                    {testCase.friendlyId && (
+                        <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded inline-block">
+                            {testCase.friendlyId}
+                        </span>
+                    )}
+                    <h1 className="text-2xl font-bold break-words leading-tight">{testCase.title}</h1>
+                </div>
+                
+                {/* Bottom Row - Priority and Status */}
+                <div className="flex items-center justify-between">
+                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                        testCase.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                        testCase.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                        'bg-green-500/20 text-green-400 border border-green-500/30'
+                    }`}>
+                        {testCase.priority} Priority
+                    </span>
+                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
+                        testCase.status === 'Pass' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                        testCase.status === 'Fail' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                        testCase.status === 'In Progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                        testCase.status === 'Draft' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' :
+                        'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                    }`}>
+                        {testCase.status}
+                    </span>
                 </div>
             </div>
 

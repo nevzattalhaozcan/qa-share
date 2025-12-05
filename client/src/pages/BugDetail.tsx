@@ -112,46 +112,11 @@ export default function BugDetail() {
         <div className="space-y-4 pb-20">
             {/* Header */}
             <div className="glass-card p-4 rounded-2xl">
-                <div className="flex items-start gap-3">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/bugs')} className="mt-1">
+                {/* Top Row - Action Buttons */}
+                <div className="flex items-center justify-between mb-4">
+                    <Button variant="ghost" size="icon" onClick={() => navigate('/bugs')}>
                         <ArrowLeft size={24} />
                     </Button>
-                    <div className="flex-1 min-w-0 space-y-3">
-                        <div className="space-y-2">
-                            {bug.friendlyId && (
-                                <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded inline-block">
-                                    {bug.friendlyId}
-                                </span>
-                            )}
-                            <h1 className="text-2xl font-bold break-words leading-tight">{bug.title}</h1>
-                        </div>
-                        
-                        {/* Status and Severity Row */}
-                        <div className="flex flex-wrap items-center gap-2">
-                            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                                bug.severity === 'Critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                                bug.severity === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                                'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                            }`}>
-                                {bug.severity} Severity
-                            </span>
-                            <StatusDropdown
-                                currentStatus={bug.status}
-                                options={['Draft', 'Opened', 'Fixed', 'Closed']}
-                                onUpdate={(status) => handleStatusChange(status as any)}
-                                colorMap={{
-                                    'Draft': 'bg-gray-500/10 text-gray-400',
-                                    'Opened': 'bg-red-500/10 text-red-500',
-                                    'Fixed': 'bg-green-500/10 text-green-500',
-                                    'Closed': 'bg-slate-500/10 text-slate-400'
-                                }}
-                                disabled={!canEditBugStatus}
-                                align="left"
-                            />
-                        </div>
-                    </div>
-                    
-                    {/* Action Buttons */}
                     <div className="flex items-center gap-1">
                         {canEditBugs && (
                             <Button variant="ghost" size="icon" onClick={() => {
@@ -171,6 +136,40 @@ export default function BugDetail() {
                             </button>
                         )}
                     </div>
+                </div>
+                
+                {/* Middle - ID and Title */}
+                <div className="space-y-2 mb-4">
+                    {bug.friendlyId && (
+                        <span className="text-xs font-mono text-primary bg-primary/10 px-2 py-1 rounded inline-block">
+                            {bug.friendlyId}
+                        </span>
+                    )}
+                    <h1 className="text-2xl font-bold break-words leading-tight">{bug.title}</h1>
+                </div>
+                
+                {/* Bottom Row - Severity and Status */}
+                <div className="flex items-center justify-between">
+                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                        bug.severity === 'Critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                        bug.severity === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                        'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                    }`}>
+                        {bug.severity} Severity
+                    </span>
+                    <StatusDropdown
+                        currentStatus={bug.status}
+                        options={['Draft', 'Opened', 'Fixed', 'Closed']}
+                        onUpdate={(status) => handleStatusChange(status as any)}
+                        colorMap={{
+                            'Draft': 'bg-gray-500/10 text-gray-400',
+                            'Opened': 'bg-red-500/10 text-red-500',
+                            'Fixed': 'bg-green-500/10 text-green-500',
+                            'Closed': 'bg-slate-500/10 text-slate-400'
+                        }}
+                        disabled={!canEditBugStatus}
+                        align="right"
+                    />
                 </div>
             </div>
 
