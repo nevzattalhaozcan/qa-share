@@ -93,7 +93,7 @@ export default function CreateTestCase() {
             return;
         }
 
-        const newTestCase = await addTestCase({
+        await addTestCase({
             ...formData,
             status: 'Draft',
             linkedBugIds: linkedBugIds,

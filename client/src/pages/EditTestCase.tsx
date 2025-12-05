@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData, type TestCase } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
@@ -55,7 +55,7 @@ export default function EditTestCase() {
         setHasUnsavedChanges(hasChanged);
     }, [formData, testCase]);
 
-    const { blocker, proceedNavigation, resetNavigation } = useUnsavedChanges({
+    const { resetNavigation } = useUnsavedChanges({
         hasUnsavedChanges,
         onNavigateAway: () => setShowSaveModal(true),
     });
@@ -211,26 +211,13 @@ export default function EditTestCase() {
                     resetNavigation();
                 }}
                 title="Unsaved Changes"
-            >
-                <p className="text-gray-600 mb-6">
-                    You have unsaved changes. Would you like to save them before leaving?
-                </p>
-                <div className="flex gap-3">
-                    <Button
-                        variant="outline"
-                        className="flex-1"
-                        onClick={handleDiscard}
-                    >
-                        Discard
-                    </Button>
-                    <Button
-                        className="flex-1"
-                        onClick={handleSave}
-                    >
-                        Save
-                    </Button>
-                </div>
-            </Modal>
+                message="You have unsaved changes. Would you like to save them before leaving?"
+                type="warning"
+                onConfirm={handleSave}
+                onCancel={handleDiscard}
+                confirmText="Save"
+                cancelText="Discard"
+            />
         </div>
     );
 }

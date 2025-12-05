@@ -1,17 +1,15 @@
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
-import { Plus, Users, Bug, ListTodo, ChevronRight, Settings, AlertTriangle, Clock } from 'lucide-react';
+import { Plus, Users, Bug, ListTodo, Settings, AlertTriangle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import TeamMembersModal from '../components/TeamMembersModal';
 
 export default function Home() {
     const { projects, activeProjectId, setActiveProjectId, testCases, bugs } = useData();
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [selectedProjectForMembers, setSelectedProjectForMembers] = useState<string | null>(null);
 
     const userId = user ? ((user as any)._id || user.id) : null;
     const userProjects = projects.filter(p => {
@@ -108,7 +106,6 @@ export default function Home() {
     const recentBugs = getRecentBugs();
     const recentTestCases = getRecentTestCases();
     const recentlyFixedBugs = getRecentlyFixedBugs();
-    const selectedProject = projects.find(p => getProjectId(p) === selectedProjectForMembers);
 
     return (
         <div className="space-y-6 pb-20">

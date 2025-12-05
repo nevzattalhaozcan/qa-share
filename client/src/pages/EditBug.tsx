@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useData, type Bug } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
@@ -35,6 +35,7 @@ export default function EditBug() {
         expectedResult: bug?.expectedResult || '',
         actualResult: bug?.actualResult || '',
         severity: (bug?.severity || 'Medium') as Bug['severity'],
+        status: (bug?.status || 'Opened') as Bug['status'],
         tags: bug?.tags || [] as string[],
         attachments: bug?.attachments || [] as string[],
     });
@@ -57,7 +58,7 @@ export default function EditBug() {
         setHasUnsavedChanges(hasChanged);
     }, [formData, bug]);
 
-    const { blocker, proceedNavigation, resetNavigation } = useUnsavedChanges({
+    const { resetNavigation } = useUnsavedChanges({
         hasUnsavedChanges,
         onNavigateAway: () => setShowSaveModal(true),
     });
@@ -273,6 +274,7 @@ export default function EditBug() {
                 message="You have unsaved changes. Would you like to save them before leaving?"
                 type="warning"
                 onConfirm={handleSave}
+                onCancel={handleDiscard}
                 confirmText="Save"
                 cancelText="Discard"
             />

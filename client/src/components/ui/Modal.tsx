@@ -8,6 +8,7 @@ interface ModalProps {
     message: string;
     type?: 'error' | 'warning' | 'confirm' | 'info';
     onConfirm?: () => void;
+    onCancel?: () => void;
     confirmText?: string;
     cancelText?: string;
 }
@@ -19,6 +20,7 @@ export function Modal({
     message,
     type = 'info',
     onConfirm,
+    onCancel,
     confirmText = 'OK',
     cancelText = 'Cancel'
 }: ModalProps) {
@@ -38,6 +40,14 @@ export function Modal({
             onConfirm();
         }
         onClose();
+    };
+
+    const handleCancel = () => {
+        if (onCancel) {
+            onCancel();
+        } else {
+            onClose();
+        }
     };
 
     return (
@@ -74,7 +84,7 @@ export function Modal({
                                 <Button 
                                     variant="outline" 
                                     className="flex-1"
-                                    onClick={onClose}
+                                    onClick={handleCancel}
                                 >
                                     {cancelText}
                                 </Button>
