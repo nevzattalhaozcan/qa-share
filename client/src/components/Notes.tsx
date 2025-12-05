@@ -151,68 +151,79 @@ export default function Notes() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
-                                className={`glass-card p-3 rounded-xl flex items-start justify-between gap-3 group ${
+                                className={`glass-card rounded-xl overflow-hidden ${
                                     note.pinned ? 'ring-2 ring-primary/30' : ''
                                 }`}
                             >
-                                <div className="flex-1 pt-1 min-w-0">
-                                    {note.type === 'kv' && (
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <Key size={12} className="text-primary" />
-                                            <span className="text-xs font-bold text-muted-foreground tracking-wider">
-                                                {note.label}
-                                            </span>
-                                        </div>
-                                    )}
-                                    <p className="text-sm whitespace-pre-wrap font-mono text-slate-300 break-all">
-                                        {linkifyText(note.content)}
-                                    </p>
+                                {/* Note Header with actions */}
+                                <div className="flex items-center justify-between gap-2 px-3 py-2 bg-white/5 border-b border-white/10">
+                                    <div className="flex items-center gap-2 min-w-0">
+                                        {note.type === 'kv' && (
+                                            <>
+                                                <Key size={14} className="text-primary flex-shrink-0" />
+                                                <span className="text-xs font-bold text-primary tracking-wider truncate">
+                                                    {note.label}
+                                                </span>
+                                            </>
+                                        )}
+                                        {note.type === 'simple' && (
+                                            <span className="text-xs text-muted-foreground">Quick Note</span>
+                                        )}
+                                    </div>
+                                    
+                                    {/* Action Buttons - Always visible on mobile, hover on desktop */}
+                                    <div className="flex items-center gap-0.5">
+                                        <button
+                                            onClick={() => handleTogglePin(noteId, note.pinned || false)}
+                                            className={`p-1.5 hover:bg-white/10 rounded-md transition-colors ${
+                                                note.pinned ? 'text-primary' : 'text-slate-400 hover:text-white'
+                                            }`}
+                                            title={note.pinned ? 'Unpin' : 'Pin to top'}
+                                        >
+                                            <Pin size={14} className={note.pinned ? 'fill-current' : ''} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleCopy(noteId, textToCopy)}
+                                            className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-slate-400 hover:text-white"
+                                            title="Copy"
+                                        >
+                                            {copiedId === noteId ? (
+                                                <Check size={14} className="text-green-400" />
+                                            ) : (
+                                                <Copy size={14} />
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => handleShare(textToCopy)}
+                                            className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-slate-400 hover:text-white"
+                                            title="Share"
+                                        >
+                                            <Share2 size={14} />
+                                        </button>
+                                        {isQA && (
+                                            <button
+                                                onClick={() => handleToggleHide(noteId)}
+                                                className="p-1.5 hover:bg-yellow-500/20 rounded-md transition-colors text-slate-400 hover:text-yellow-400"
+                                                title="Hide note"
+                                            >
+                                                <EyeOff size={14} />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => deleteNote(noteId)}
+                                            className="p-1.5 hover:bg-red-500/20 rounded-md transition-colors text-slate-400 hover:text-red-400"
+                                            title="Delete"
+                                        >
+                                            <Trash2 size={14} />
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                                    <button
-                                        onClick={() => handleTogglePin(noteId, note.pinned || false)}
-                                        className={`p-2 hover:bg-white/10 rounded-lg transition-colors ${
-                                            note.pinned ? 'text-primary' : 'text-slate-400 hover:text-white'
-                                        }`}
-                                        title={note.pinned ? 'Unpin' : 'Pin to top'}
-                                    >
-                                        <Pin size={16} className={note.pinned ? 'fill-current' : ''} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleCopy(noteId, textToCopy)}
-                                        className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white"
-                                        title="Copy"
-                                    >
-                                        {copiedId === noteId ? (
-                                            <Check size={16} className="text-green-400" />
-                                        ) : (
-                                            <Copy size={16} />
-                                        )}
-                                    </button>
-                                    <button
-                                        onClick={() => handleShare(textToCopy)}
-                                        className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-white"
-                                        title="Share"
-                                    >
-                                        <Share2 size={16} />
-                                    </button>
-                                    {isQA && (
-                                        <button
-                                            onClick={() => handleToggleHide(noteId)}
-                                            className="p-2 hover:bg-yellow-500/20 rounded-lg transition-colors text-slate-400 hover:text-yellow-400"
-                                            title="Hide note"
-                                        >
-                                            <EyeOff size={16} />
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => deleteNote(noteId)}
-                                        className="p-2 hover:bg-red-500/20 rounded-lg transition-colors text-slate-400 hover:text-red-400"
-                                        title="Delete"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+                                {/* Note Content */}
+                                <div className="p-3">
+                                    <p className="text-sm whitespace-pre-wrap font-mono text-slate-200 break-words leading-relaxed">
+                                        {linkifyText(note.content)}
+                                    </p>
                                 </div>
                             </motion.div>
                         )
