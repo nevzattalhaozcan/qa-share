@@ -70,8 +70,9 @@ export default function EditTestCase() {
                     return;
                 }
             }
-            setHasUnsavedChanges(false);
             updateTestCase(id, formData);
+            setHasUnsavedChanges(false);
+            resetNavigation();
             navigate(`/tests/${id}`);
         }
     };

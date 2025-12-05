@@ -108,8 +108,9 @@ export default function EditBug() {
                     return;
                 }
             }
-            setHasUnsavedChanges(false);
             updateBug(id, formData);
+            setHasUnsavedChanges(false);
+            resetNavigation();
             navigate(`/bugs/${id}`);
         }
     };
