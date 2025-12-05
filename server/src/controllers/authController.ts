@@ -28,6 +28,7 @@ export const register = async (req: Request, res: Response) => {
             user: {
                 id: user.id,
                 name: user.name,
+                username: user.username,
                 role: user.role,
             },
         };
@@ -65,6 +66,7 @@ export const login = async (req: Request, res: Response) => {
             user: {
                 id: user.id,
                 name: user.name,
+                username: user.username,
                 role: user.role,
             },
         };
