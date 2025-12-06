@@ -11,9 +11,31 @@ const PORT = process.env.PORT || 5000;
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production'
-        ? process.env.FRONTEND_URL || '*'
-        : '*',
+    origin: (requestOrigin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!requestOrigin) return callback(null, true);
+
+        const allowedOrigins = [
+            'http://localhost:5173',
+            'http://localhost:3000',
+            process.env.FRONTEND_URL,
+            'https://nevzattalhaozcan.github.io'
+        ].filter(Boolean) as string[];
+
+        // Check if the request origin matches any of the allowed origins
+        // We strip trailing slashes for comparison just in case
+        const isAllowed = allowedOrigins.some(origin =>
+            origin.replace(/\/$/, '') === requestOrigin.replace(/\/$/, '')
+        );
+
+        if (isAllowed) {
+            callback(null, true);
+        } else {
+            console.log('Blocked by CORS. Request Origin:', requestOrigin);
+            console.log('Allowed Origins:', allowedOrigins);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 };
 
