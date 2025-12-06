@@ -1,6 +1,6 @@
 import { useData } from '../context/DataContext';
 import { Plus, RotateCcw, Filter, CheckSquare, Square, X, ArrowUpDown } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import StatusDropdown from '../components/StatusDropdown';
 import TestCaseActionModal from '../components/TestCaseActionModal';
@@ -20,6 +20,7 @@ interface TestRun {
 
 export default function TestCases() {
     const location = useLocation();
+    const navigate = useNavigate();
     const { testCases, activeProjectId, updateTestCaseStatus, isLoading } = useData();
     const { canCreateTestCases, canEditTestCases } = usePermissions();
     const [latestRuns, setLatestRuns] = useState<{ [key: string]: TestRun }>({});
@@ -64,6 +65,21 @@ export default function TestCases() {
         e.preventDefault();
         e.stopPropagation();
         await updateTestCaseStatus(testId, 'Todo');
+    };
+
+    const handleStatusUpdate = async (testId: string, newStatus: string) => {
+        if (newStatus === 'Fail') {
+            // Optimistically update status to Fail before navigating
+            await updateTestCaseStatus(testId, 'Fail');
+            navigate('/bugs/create', {
+                state: {
+                    linkedTestCaseId: testId,
+                    returnTo: location
+                }
+            });
+        } else {
+            updateTestCaseStatus(testId, newStatus as any);
+        }
     };
 
     const toggleSelection = (id: string) => {
@@ -443,7 +459,7 @@ export default function TestCases() {
                                         <StatusDropdown
                                             currentStatus={displayStatus}
                                             options={['Draft', 'Todo', 'In Progress', 'Pass', 'Fail']}
-                                            onUpdate={(status) => updateTestCaseStatus(testId, status as any)}
+                                            onUpdate={(status) => handleStatusUpdate(testId, status)}
                                             colorMap={statusColors}
                                             disabled={!canEditTestCases || selectionMode}
                                         />

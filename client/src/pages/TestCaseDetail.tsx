@@ -7,6 +7,7 @@ import { ArrowLeft, Edit, Link as LinkIcon, Bug as BugIcon, Trash2, X, PlayCircl
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
 import LinkSelector from '../components/LinkSelector';
+import StatusDropdown from '../components/StatusDropdown';
 import { AnimatePresence } from 'framer-motion';
 import { formatListText } from '../lib/utils';
 import { getTestRuns } from '../lib/api';
@@ -26,7 +27,7 @@ export default function TestCaseDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const { testCases, bugs, linkItems, unlinkItems, deleteTestCase, activeProjectId } = useData();
+    const { testCases, bugs, linkItems, unlinkItems, deleteTestCase, updateTestCaseStatus, activeProjectId } = useData();
     const { canEditTestCases } = usePermissions();
     const { user } = useAuth();
     const [showLinkSelector, setShowLinkSelector] = useState(false);
@@ -155,14 +156,44 @@ export default function TestCaseDetail() {
                         }`}>
                         {testCase.priority} Priority
                     </span>
-                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${testCase.status === 'Pass' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                        testCase.status === 'Fail' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-                            testCase.status === 'In Progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                                testCase.status === 'Draft' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' :
-                                    'bg-slate-500/20 text-slate-400 border-slate-500/30'
-                        }`}>
-                        {testCase.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        {canEditTestCases ? (
+                            <StatusDropdown
+                                currentStatus={testCase.status}
+                                options={['Draft', 'Todo', 'In Progress', 'Pass', 'Fail']}
+                                onUpdate={async (status) => {
+                                    const tcId = (testCase as any)._id || testCase.id;
+                                    if (status === 'Fail') {
+                                        await updateTestCaseStatus(tcId, 'Fail');
+                                        navigate('/bugs/create', {
+                                            state: {
+                                                linkedTestCaseId: tcId,
+                                                returnTo: location
+                                            }
+                                        });
+                                    } else {
+                                        updateTestCaseStatus(tcId, status as any);
+                                    }
+                                }}
+                                colorMap={{
+                                    'Pass': 'bg-green-500/20 text-green-400',
+                                    'Fail': 'bg-red-500/20 text-red-400',
+                                    'In Progress': 'bg-blue-500/20 text-blue-400',
+                                    'Draft': 'bg-gray-500/20 text-gray-400',
+                                    'Todo': 'bg-slate-500/20 text-slate-400'
+                                }}
+                            />
+                        ) : (
+                            <span className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${testCase.status === 'Pass' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                                testCase.status === 'Fail' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
+                                    testCase.status === 'In Progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                                        testCase.status === 'Draft' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' :
+                                            'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                                }`}>
+                                {testCase.status}
+                            </span>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -272,37 +303,39 @@ export default function TestCaseDetail() {
             </div>
 
             {/* Test Run History */}
-            {testRuns.length > 0 && (
-                <div className="glass-card p-6 rounded-2xl">
-                    <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2 mb-4">
-                        <PlayCircle size={14} />
-                        Test Run History
-                    </h3>
-                    <div className="space-y-2">
-                        {testRuns.map((run) => (
-                            <div
-                                key={run._id}
-                                className="bg-white/5 p-3 rounded-lg border border-white/5 flex items-center justify-between"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <span className="font-mono text-xs text-primary bg-primary/10 px-2 py-1 rounded">
-                                        {run.runId}
-                                    </span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${run.status === 'Pass'
-                                        ? 'bg-green-500/10 text-green-500'
-                                        : 'bg-red-500/10 text-red-500'
-                                        }`}>
-                                        {run.status}
+            {
+                testRuns.length > 0 && (
+                    <div className="glass-card p-6 rounded-2xl">
+                        <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2 mb-4">
+                            <PlayCircle size={14} />
+                            Test Run History
+                        </h3>
+                        <div className="space-y-2">
+                            {testRuns.map((run) => (
+                                <div
+                                    key={run._id}
+                                    className="bg-white/5 p-3 rounded-lg border border-white/5 flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="font-mono text-xs text-primary bg-primary/10 px-2 py-1 rounded">
+                                            {run.runId}
+                                        </span>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${run.status === 'Pass'
+                                            ? 'bg-green-500/10 text-green-500'
+                                            : 'bg-red-500/10 text-red-500'
+                                            }`}>
+                                            {run.status}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-muted-foreground">
+                                        {new Date(run.runDateTime).toLocaleString()}
                                     </span>
                                 </div>
-                                <span className="text-xs text-muted-foreground">
-                                    {new Date(run.runDateTime).toLocaleString()}
-                                </span>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <AnimatePresence>
                 {showLinkSelector && (
@@ -334,6 +367,6 @@ export default function TestCaseDetail() {
                 confirmText="Delete"
                 cancelText="Cancel"
             />
-        </div>
+        </div >
     );
 }

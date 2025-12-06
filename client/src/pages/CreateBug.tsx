@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useData, type Bug } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -18,6 +18,7 @@ import { AnimatePresence } from 'framer-motion';
 
 export default function CreateBug() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { addBug, activeProjectId, testCases } = useData();
     const { user } = useAuth();
     const { canCreateBugs, canEditTestCases } = usePermissions();
@@ -46,7 +47,9 @@ export default function CreateBug() {
         tags: [] as string[],
     });
 
-    const [linkedTestIds, setLinkedTestIds] = useState<string[]>([]);
+    const [linkedTestIds, setLinkedTestIds] = useState<string[]>(
+        location.state?.linkedTestCaseId ? [location.state.linkedTestCaseId] : []
+    );
     const [showLinkSelector, setShowLinkSelector] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [showDraftModal, setShowDraftModal] = useState(false);
@@ -55,9 +58,9 @@ export default function CreateBug() {
 
     // Track if any field has been filled
     useEffect(() => {
-        const hasContent = !!(formData.title || formData.description || formData.stepsToReproduce || 
-                          formData.expectedResult || formData.actualResult ||
-                          formData.tags.length > 0 || formData.attachments.length > 0);
+        const hasContent = !!(formData.title || formData.description || formData.stepsToReproduce ||
+            formData.expectedResult || formData.actualResult ||
+            formData.tags.length > 0 || formData.attachments.length > 0);
         setHasUnsavedChanges(hasContent);
     }, [formData]);
 
@@ -70,12 +73,12 @@ export default function CreateBug() {
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            
+
             setIsUploading(true);
             try {
                 // Upload to Firebase Storage
                 const result = await uploadFile(file);
-                
+
                 // Add the Firebase URL to attachments
                 setFormData(prev => ({
                     ...prev,
@@ -118,7 +121,13 @@ export default function CreateBug() {
         });
 
         if (newBug) {
-            navigate('/bugs');
+            if (location.state?.returnTo) {
+                navigate(location.state.returnTo.pathname + location.state.returnTo.search, {
+                    state: location.state.returnTo.state
+                });
+            } else {
+                navigate('/bugs');
+            }
         }
     };
 
@@ -137,13 +146,27 @@ export default function CreateBug() {
 
         setHasUnsavedChanges(false);
         setShowDraftModal(false);
-        navigate('/bugs');
+        setHasUnsavedChanges(false);
+        setShowDraftModal(false);
+        if (location.state?.returnTo) {
+            navigate(location.state.returnTo.pathname + location.state.returnTo.search, {
+                state: location.state.returnTo.state
+            });
+        } else {
+            navigate('/bugs');
+        }
     };
 
     const handleDiscard = () => {
         setHasUnsavedChanges(false);
         setShowDraftModal(false);
-        navigate('/bugs');
+        if (location.state?.returnTo) {
+            navigate(location.state.returnTo.pathname + location.state.returnTo.search, {
+                state: location.state.returnTo.state
+            });
+        } else {
+            navigate('/bugs');
+        }
     };
 
     return (
@@ -242,10 +265,10 @@ export default function CreateBug() {
                                     <span className="text-xs text-muted-foreground">Add Media</span>
                                 </>
                             )}
-                            <input 
-                                type="file" 
-                                accept="image/*,video/*" 
-                                className="hidden" 
+                            <input
+                                type="file"
+                                accept="image/*,video/*"
+                                className="hidden"
                                 onChange={handleImageUpload}
                                 disabled={isUploading}
                             />
