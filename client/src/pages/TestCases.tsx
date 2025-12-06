@@ -8,6 +8,8 @@ import { useState, useEffect } from 'react';
 import { getLatestTestRunsBatch } from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PageLoadingSkeleton } from '../components/ui/Skeleton';
+import { useUrlFilters } from '../hooks/useUrlFilters';
+import { useScrollPosition } from '../hooks/useScrollPosition';
 
 interface TestRun {
     _id: string;
@@ -21,11 +23,16 @@ export default function TestCases() {
     const { canCreateTestCases, canEditTestCases } = usePermissions();
     const [latestRuns, setLatestRuns] = useState<{ [key: string]: TestRun }>({});
     const [showFilters, setShowFilters] = useState(false);
-    const [filters, setFilters] = useState({
+
+    // Persist filters to URL
+    const { filters, toggleFilter } = useUrlFilters({
         status: [] as string[],
         priority: [] as string[],
         tags: [] as string[],
     });
+
+    // Persist scroll position
+    useScrollPosition('testCases-scroll', isLoading);
 
     // Selection mode state
     const [selectionMode, setSelectionMode] = useState(false);
@@ -54,15 +61,6 @@ export default function TestCases() {
         e.preventDefault();
         e.stopPropagation();
         await updateTestCaseStatus(testId, 'Todo');
-    };
-
-    const toggleFilter = (type: 'status' | 'priority' | 'tags', value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            [type]: prev[type].includes(value)
-                ? prev[type].filter(v => v !== value)
-                : [...prev[type], value]
-        }));
     };
 
     const toggleSelection = (id: string) => {

@@ -6,32 +6,30 @@ import StatusDropdown from '../components/StatusDropdown';
 import { useState } from 'react';
 import { PageLoadingSkeleton } from '../components/ui/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUrlFilters } from '../hooks/useUrlFilters';
+import { useScrollPosition } from '../hooks/useScrollPosition';
 
 export default function Bugs() {
     const { bugs, activeProjectId, updateBugStatus, isLoading } = useData();
     const { canCreateBugs, canEditBugStatus } = usePermissions();
     const [showFilters, setShowFilters] = useState(false);
     const [showClosedBugs, setShowClosedBugs] = useState(false);
-    const [filters, setFilters] = useState({
+
+    // Persist filters to URL
+    const { filters, toggleFilter } = useUrlFilters({
         status: [] as string[],
         severity: [] as string[],
         tags: [] as string[],
     });
+
+    // Persist scroll position
+    useScrollPosition('bugs-scroll', isLoading);
 
     const projectBugs = bugs.filter(b => String(b.projectId) === String(activeProjectId));
 
     // Split bugs into active and closed
     const activeBugs = projectBugs.filter(b => b.status !== 'Closed');
     const closedBugs = projectBugs.filter(b => b.status === 'Closed');
-
-    const toggleFilter = (type: 'status' | 'severity' | 'tags', value: string) => {
-        setFilters(prev => ({
-            ...prev,
-            [type]: prev[type].includes(value)
-                ? prev[type].filter(v => v !== value)
-                : [...prev[type], value]
-        }));
-    };
 
     // Filter only active bugs
     const filteredActiveBugs = activeBugs.filter(bug => {
