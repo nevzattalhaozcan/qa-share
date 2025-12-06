@@ -11,8 +11,8 @@ const PORT = process.env.PORT || 5000;
 
 // CORS configuration
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' 
-        ? process.env.FRONTEND_URL || '*' 
+    origin: process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL || '*'
         : '*',
     credentials: true,
 };
@@ -45,18 +45,39 @@ app.get('/', (req, res) => {
     res.send('QA Share API is running');
 });
 
+// Health check endpoint for keep-alive ping
+app.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 // Connect to MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/qa-share';
 
 mongoose.connect(MONGODB_URI)
     .then(async () => {
         console.log('Connected to MongoDB');
-        
+
         // Seed database with default users
         await seedDatabase();
-        
+
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
+
+            // Keep-alive: Self-ping every 14 minutes to prevent Render from spinning down
+            if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
+                const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes
+
+                setInterval(async () => {
+                    try {
+                        const response = await fetch(`${process.env.RENDER_EXTERNAL_URL}/api/health`);
+                        console.log(`Keep-alive ping: ${response.status}`);
+                    } catch (error) {
+                        console.error('Keep-alive ping failed:', error);
+                    }
+                }, PING_INTERVAL);
+
+                console.log('Keep-alive ping scheduled every 14 minutes');
+            }
         });
     })
     .catch((err) => {
