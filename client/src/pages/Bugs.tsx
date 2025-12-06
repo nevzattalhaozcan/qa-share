@@ -112,7 +112,16 @@ export default function Bugs() {
                             {bug.severity}
                         </span>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{bug.description}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{bug.description}</p>
+                    {bug.tags && bug.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                            {bug.tags.map(tag => (
+                                <span key={tag} className="px-2 py-0.5 bg-primary/20 text-primary rounded-full text-xs">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </Link>
 
                 <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-2">
