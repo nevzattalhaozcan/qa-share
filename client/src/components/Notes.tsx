@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff, Eye, X } from 'lucide-react';
+import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff, Eye, X, Pencil, Save } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Helper function to convert URLs to clickable links
@@ -38,8 +38,25 @@ export default function Notes() {
     const [label, setLabel] = useState('');
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [selectedNote, setSelectedNote] = useState<typeof notes[0] | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+
+    // Edit form state
+    const [editLabel, setEditLabel] = useState('');
+    const [editContent, setEditContent] = useState('');
 
     const isQA = user?.role === 'QA';
+
+    // Reset edit state when modal closes or note changes
+    useEffect(() => {
+        if (selectedNote) {
+            setEditLabel(selectedNote.label || '');
+            setEditContent(selectedNote.content);
+        } else {
+            setIsEditing(false);
+            setEditLabel('');
+            setEditContent('');
+        }
+    }, [selectedNote]);
 
     // Sort notes: pinned first, then by creation date
     // QA can see hidden notes, others can't
@@ -64,6 +81,25 @@ export default function Notes() {
             });
             setContent('');
             setLabel('');
+        }
+    };
+
+    const handleUpdateNote = async () => {
+        if (selectedNote && editContent.trim()) {
+            const noteId = (selectedNote as any)._id || selectedNote.id;
+            await updateNote(noteId, {
+                content: editContent.trim(),
+                label: selectedNote.type === 'kv' ? editLabel.trim() : undefined
+            });
+
+            // Update local selected note to reflect changes immediately in UI
+            setSelectedNote(prev => prev ? ({
+                ...prev,
+                content: editContent.trim(),
+                label: selectedNote.type === 'kv' ? editLabel.trim() : prev.label
+            }) : null);
+
+            setIsEditing(false);
         }
     };
 
@@ -175,15 +211,20 @@ export default function Notes() {
                                         {note.type === 'simple' && (
                                             <span className="text-xs text-muted-foreground">Quick Note</span>
                                         )}
-                                        {note.hidden && isQA && (
-                                            <span className="text-[10px] px-1.5 py-0.5 bg-yellow-500/20 text-yellow-400 rounded font-semibold uppercase tracking-wide">
-                                                Hidden
-                                            </span>
-                                        )}
                                     </div>
 
                                     {/* Action Buttons - Always visible on mobile, hover on desktop */}
                                     <div className="flex items-center gap-0.5">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedNote(note);
+                                                setIsEditing(true);
+                                            }}
+                                            className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-slate-400 hover:text-white"
+                                            title="Edit"
+                                        >
+                                            <Pencil size={14} />
+                                        </button>
                                         <button
                                             onClick={() => handleTogglePin(noteId, note.pinned || false)}
                                             className={`p-1.5 hover:bg-white/10 rounded-md transition-colors ${note.pinned ? 'text-primary' : 'text-slate-400 hover:text-white'
@@ -267,81 +308,137 @@ export default function Notes() {
                         >
                             <div className="glass-card rounded-2xl p-6 shadow-2xl border border-white/10 space-y-6">
                                 <div className="flex items-start justify-between gap-4">
-                                    <div className="space-y-1">
+                                    <div className="space-y-1 w-full">
                                         <div className="flex items-center gap-2 text-primary mb-2">
                                             <Key size={16} />
                                             <span className="text-xs font-bold tracking-wider uppercase opacity-80">Key</span>
                                         </div>
-                                        <h3 className="text-xl font-bold break-words">{selectedNote.label}</h3>
+                                        {isEditing ? (
+                                            selectedNote.type === 'kv' ? (
+                                                <Input
+                                                    value={editLabel}
+                                                    onChange={(e) => setEditLabel(e.target.value)}
+                                                    className="w-full text-lg font-bold"
+                                                    placeholder="Key/Label"
+                                                />
+                                            ) : (
+                                                <span className="text-sm text-muted-foreground">Quick Note (No Label)</span>
+                                            )
+                                        ) : (
+                                            <h3 className="text-xl font-bold break-words">{selectedNote.label || 'Quick Note'}</h3>
+                                        )}
                                     </div>
-                                    <button
-                                        onClick={() => setSelectedNote(null)}
-                                        className="p-2 hover:bg-white/10 rounded-full transition-colors text-muted-foreground hover:text-white"
-                                    >
-                                        <X size={20} />
-                                    </button>
+                                    <div className="flex gap-2">
+                                        {!isEditing && (
+                                            <button
+                                                onClick={() => setIsEditing(true)}
+                                                className="p-2 hover:bg-white/10 rounded-full transition-colors text-muted-foreground hover:text-white"
+                                                title="Edit"
+                                            >
+                                                <Pencil size={20} />
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => setSelectedNote(null)}
+                                            className="p-2 hover:bg-white/10 rounded-full transition-colors text-muted-foreground hover:text-white"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="space-y-2 bg-black/20 p-4 rounded-xl border border-white/5">
                                     <div className="flex items-center justify-between text-muted-foreground mb-1">
                                         <span className="text-xs font-bold tracking-wider uppercase opacity-80">Value</span>
-                                        <button
-                                            onClick={() => handleCopy('modal-val', selectedNote.content)}
-                                            className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-xs flex items-center gap-1"
-                                        >
-                                            {copiedId === 'modal-val' ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
-                                            Copy
-                                        </button>
+                                        {!isEditing && (
+                                            <button
+                                                onClick={() => handleCopy('modal-val', selectedNote.content)}
+                                                className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-xs flex items-center gap-1"
+                                            >
+                                                {copiedId === 'modal-val' ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                                                Copy
+                                            </button>
+                                        )}
                                     </div>
-                                    <p className="text-base font-mono text-white whitespace-pre-wrap break-words">
-                                        {linkifyText(selectedNote.content)}
-                                    </p>
+                                    {isEditing ? (
+                                        <textarea
+                                            value={editContent}
+                                            onChange={(e) => setEditContent(e.target.value)}
+                                            className="w-full min-h-[150px] bg-transparent border border-white/20 rounded-lg p-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50 resize-y font-mono"
+                                            placeholder="Note content..."
+                                        />
+                                    ) : (
+                                        <p className="text-base font-mono text-white whitespace-pre-wrap break-words">
+                                            {linkifyText(selectedNote.content)}
+                                        </p>
+                                    )}
                                 </div>
 
-                                <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
-                                    <button
-                                        onClick={() => {
-                                            const noteId = (selectedNote as any)._id || selectedNote.id;
-                                            handleTogglePin(noteId, selectedNote.pinned || false);
-                                            setSelectedNote(null);
-                                        }}
-                                        className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all ${selectedNote.pinned
-                                                ? 'bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30'
-                                                : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
-                                            }`}
-                                    >
-                                        <Pin size={18} className={selectedNote.pinned ? 'fill-current' : ''} />
-                                        {selectedNote.pinned ? 'Unpin' : 'Pin'}
-                                    </button>
+                                <div className="flex gap-2 pt-2 border-t border-white/5">
+                                    {isEditing ? (
+                                        <>
+                                            <button
+                                                onClick={() => setIsEditing(false)}
+                                                className="flex-1 p-3 rounded-xl font-medium bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white transition-all"
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                onClick={handleUpdateNote}
+                                                disabled={!editContent.trim() || (selectedNote.type === 'kv' && !editLabel.trim())}
+                                                className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium bg-primary text-white hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Save size={18} />
+                                                Save Changes
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => {
+                                                    const noteId = (selectedNote as any)._id || selectedNote.id;
+                                                    handleTogglePin(noteId, selectedNote.pinned || false);
+                                                    setSelectedNote(null);
+                                                }}
+                                                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all ${selectedNote.pinned
+                                                        ? 'bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30'
+                                                        : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                                                    }`}
+                                            >
+                                                <Pin size={18} className={selectedNote.pinned ? 'fill-current' : ''} />
+                                                {selectedNote.pinned ? 'Unpin' : 'Pin'}
+                                            </button>
 
-                                    {isQA && (
-                                        <button
-                                            onClick={() => {
-                                                const noteId = (selectedNote as any)._id || selectedNote.id;
-                                                handleToggleHide(noteId, selectedNote.hidden || false);
-                                                setSelectedNote(null);
-                                            }}
-                                            className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all ${selectedNote.hidden
-                                                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/30'
-                                                    : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
-                                                }`}
-                                        >
-                                            {selectedNote.hidden ? <Eye size={18} /> : <EyeOff size={18} />}
-                                            {selectedNote.hidden ? 'Unhide' : 'Hide'}
-                                        </button>
+                                            {isQA && (
+                                                <button
+                                                    onClick={() => {
+                                                        const noteId = (selectedNote as any)._id || selectedNote.id;
+                                                        handleToggleHide(noteId, selectedNote.hidden || false);
+                                                        setSelectedNote(null);
+                                                    }}
+                                                    className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all ${selectedNote.hidden
+                                                            ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/30'
+                                                            : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                                                        }`}
+                                                >
+                                                    {selectedNote.hidden ? <Eye size={18} /> : <EyeOff size={18} />}
+                                                    {selectedNote.hidden ? 'Unhide' : 'Hide'}
+                                                </button>
+                                            )}
+
+                                            <button
+                                                onClick={() => {
+                                                    const noteId = (selectedNote as any)._id || selectedNote.id;
+                                                    deleteNote(noteId);
+                                                    setSelectedNote(null);
+                                                }}
+                                                className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all"
+                                            >
+                                                <Trash2 size={18} />
+                                                Delete
+                                            </button>
+                                        </>
                                     )}
-
-                                    <button
-                                        onClick={() => {
-                                            const noteId = (selectedNote as any)._id || selectedNote.id;
-                                            deleteNote(noteId);
-                                            setSelectedNote(null);
-                                        }}
-                                        className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all"
-                                    >
-                                        <Trash2 size={18} />
-                                        Delete
-                                    </button>
                                 </div>
                             </div>
                         </motion.div>
