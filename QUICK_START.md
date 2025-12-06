@@ -13,7 +13,7 @@
 
 **Connection String Format:**
 ```
-mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/qa-share?retryWrites=true&w=majority
+mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/collection?retryWrites=true&w=majority
 ```
 
 ---
