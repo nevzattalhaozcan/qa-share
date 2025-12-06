@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { useState, useEffect, useCallback } from 'react';
 
-export function useUrlFilters<T extends Record<string, string[]>>(defaultFilters: T) {
+export function useUrlFilters<T extends Record<string, any>>(defaultFilters: T) {
     const [searchParams, setSearchParams] = useSearchParams();
     const [filters, setFilters] = useState<T>(defaultFilters);
 
@@ -12,9 +12,14 @@ export function useUrlFilters<T extends Record<string, string[]>>(defaultFilters
 
         Object.keys(defaultFilters).forEach(key => {
             const paramValue = searchParams.get(key);
-            if (paramValue) {
-                // Assume comma-separated values for arrays
-                (newFilters as any)[key] = paramValue.split(',');
+            if (paramValue !== null) {
+                // If default value is an array, split by comma
+                if (Array.isArray(defaultFilters[key])) {
+                    (newFilters as any)[key] = paramValue ? paramValue.split(',') : [];
+                } else {
+                    // Otherwise treat as string
+                    (newFilters as any)[key] = paramValue;
+                }
                 hasUpdates = true;
             }
         });
@@ -29,8 +34,14 @@ export function useUrlFilters<T extends Record<string, string[]>>(defaultFilters
         const newParams = new URLSearchParams(searchParams);
 
         Object.entries(newFilters).forEach(([key, value]) => {
-            if (Array.isArray(value) && value.length > 0) {
-                newParams.set(key, value.join(','));
+            if (Array.isArray(value)) {
+                if (value.length > 0) {
+                    newParams.set(key, value.join(','));
+                } else {
+                    newParams.delete(key);
+                }
+            } else if (value) {
+                newParams.set(key, String(value));
             } else {
                 newParams.delete(key);
             }
@@ -42,6 +53,8 @@ export function useUrlFilters<T extends Record<string, string[]>>(defaultFilters
     const toggleFilter = useCallback((type: keyof T, value: string) => {
         setFilters(prev => {
             const currentValues = prev[type] as string[];
+            if (!Array.isArray(currentValues)) return prev; // Safety check
+
             const newValues = currentValues.includes(value)
                 ? currentValues.filter(v => v !== value)
                 : [...currentValues, value];
@@ -52,10 +65,18 @@ export function useUrlFilters<T extends Record<string, string[]>>(defaultFilters
         });
     }, [updateUrl]);
 
+    const updateFilter = useCallback((type: keyof T, value: any) => {
+        setFilters(prev => {
+            const newFilters = { ...prev, [type]: value };
+            updateUrl(newFilters);
+            return newFilters;
+        });
+    }, [updateUrl]);
+
     const clearFilters = useCallback(() => {
         setFilters(defaultFilters);
         updateUrl(defaultFilters);
     }, [defaultFilters, updateUrl]);
 
-    return { filters, toggleFilter, clearFilters, setFilters };
+    return { filters, toggleFilter, updateFilter, clearFilters, setFilters };
 }

@@ -25,10 +25,10 @@ export default function TestCases() {
     const [showFilters, setShowFilters] = useState(false);
 
     // Persist filters to URL
-    const { filters, toggleFilter } = useUrlFilters({
+    const { filters, toggleFilter, updateFilter } = useUrlFilters({
         status: [] as string[],
         priority: [] as string[],
-        tags: [] as string[],
+        search: '',
     });
 
     // Persist scroll position
@@ -104,12 +104,18 @@ export default function TestCases() {
         if (filters.priority.length > 0 && !filters.priority.includes(test.priority)) {
             return false;
         }
-        if (filters.tags.length > 0) {
-            const testTags = test.tags || [];
-            if (!filters.tags.some(tag => testTags.includes(tag))) {
-                return false;
-            }
+
+        // Unified Search Logic
+        if (filters.search) {
+            const term = filters.search.toLowerCase();
+            const matches =
+                test.title.toLowerCase().includes(term) ||
+                test.description.toLowerCase().includes(term) ||
+                (test.tags && test.tags.some(t => t.toLowerCase().includes(term)));
+
+            if (!matches) return false;
         }
+
         return true;
     });
 
@@ -153,7 +159,7 @@ export default function TestCases() {
                     )}
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`p-2 rounded-full transition-colors ${showFilters || filters.status.length > 0 || filters.priority.length > 0 || filters.tags.length > 0
+                        className={`p-2 rounded-full transition-colors ${showFilters || filters.status.length > 0 || filters.priority.length > 0 || !!filters.search
                             ? 'bg-primary/20 text-primary'
                             : 'bg-primary/10 text-primary hover:bg-primary/20'
                             }`}
@@ -202,6 +208,16 @@ export default function TestCases() {
             {showFilters && (
                 <div className="glass-card p-4 rounded-xl space-y-4">
                     <div>
+                        <h3 className="text-sm font-semibold mb-2">Search</h3>
+                        <input
+                            type="text"
+                            value={filters.search}
+                            onChange={(e) => updateFilter('search', e.target.value)}
+                            placeholder="Search by title, description, or tag..."
+                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                        />
+                    </div>
+                    <div>
                         <h3 className="text-sm font-semibold mb-2">Status</h3>
                         <div className="flex flex-wrap gap-2">
                             {['Draft', 'Todo', 'In Progress', 'Pass', 'Fail'].map(status => (
@@ -233,23 +249,6 @@ export default function TestCases() {
                                         }`}
                                 >
                                     {priority}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-semibold mb-2">Tags</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {['ui', 'backend', 'db', 'mobile', 'web'].map(tag => (
-                                <button
-                                    key={tag}
-                                    onClick={() => toggleFilter('tags', tag)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filters.tags.includes(tag)
-                                        ? 'bg-primary/20 text-primary border-2 border-primary'
-                                        : 'bg-white/5 text-muted-foreground hover:bg-white/10'
-                                        }`}
-                                >
-                                    {tag}
                                 </button>
                             ))}
                         </div>
