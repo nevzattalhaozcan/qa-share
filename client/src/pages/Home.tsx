@@ -6,9 +6,10 @@ import { Plus, Users, Bug, ListTodo, Settings, AlertTriangle, Clock, ChevronRigh
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import TeamMembersModal from '../components/TeamMembersModal';
+import { PageLoadingSkeleton, ProjectCardSkeleton, Skeleton } from '../components/ui/Skeleton';
 
 export default function Home() {
-    const { projects, activeProjectId, setActiveProjectId, testCases, bugs } = useData();
+    const { projects, activeProjectId, setActiveProjectId, testCases, bugs, isLoading } = useData();
     const { user } = useAuth();
     const navigate = useNavigate();
     const [selectedProjectForMembers, setSelectedProjectForMembers] = useState<string | null>(null);
@@ -110,6 +111,28 @@ export default function Home() {
     const recentBugs = getRecentBugs();
     const recentTestCases = getRecentTestCases();
     const recentlyFixedBugs = getRecentlyFixedBugs();
+
+    // Show loading skeleton
+    if (isLoading) {
+        return (
+            <div className="space-y-6 pb-20">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold">Projects</h1>
+                        <p className="text-sm text-muted-foreground">Manage your QA workflow</p>
+                    </div>
+                </div>
+                <div className="space-y-3">
+                    <ProjectCardSkeleton />
+                    <ProjectCardSkeleton />
+                </div>
+                <div className="space-y-4 mt-6">
+                    <Skeleton className="h-6 w-40" />
+                    <PageLoadingSkeleton type="cards" count={2} />
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 pb-20">

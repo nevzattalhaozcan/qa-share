@@ -106,6 +106,7 @@ interface DataContextType {
     notifications: Notification[];
     comments: Comment[];
     activeProjectId: string | null;
+    isLoading: boolean;
     setActiveProjectId: (id: string | null) => void;
     addProject: (project: Omit<Project, 'id' | 'createdAt'>) => void;
     deleteProject: (projectId: string) => void;
@@ -142,12 +143,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [notes, setNotes] = useState<Note[]>([]);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [comments, setComments] = useState<Comment[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [activeProjectId, setActiveProjectId] = useState<string | null>(() => {
         return localStorage.getItem('activeProjectId');
     });
 
     const fetchData = async () => {
         try {
+            setIsLoading(true);
             const [projectsRes, testsRes, bugsRes, notificationsRes] = await Promise.all([
                 api.get('/projects'),
                 api.get('/tests'),
@@ -169,6 +172,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             }
         } catch (err) {
             console.error('Error fetching data:', err);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -193,7 +198,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 setNotes([]);
             }
         };
-        
+
         fetchProjectNotes();
     }, [activeProjectId]);
 
@@ -311,14 +316,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 const testCase = testCases.find(t => t.id === id1 || (t as any)._id === id1);
                 if (testCase) {
                     // Check if link already exists
-                    const alreadyLinked = testCase.linkedBugIds?.some(linkedId => 
+                    const alreadyLinked = testCase.linkedBugIds?.some(linkedId =>
                         String(linkedId) === String(id2)
                     );
                     if (alreadyLinked) {
                         console.log('Already linked, skipping');
                         return;
                     }
-                    
+
                     const newLinks = [...(testCase.linkedBugIds || []), id2];
                     const res = await api.put(`/tests/${id1}`, { linkedBugIds: newLinks });
                     setTestCases(testCases.map(t => (t.id === id1 || (t as any)._id === id1) ? res.data : t));
@@ -326,7 +331,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                     // Also update local bug state to reflect the link immediately
                     setBugs(bugs.map(b => {
                         if (b.id === id2 || (b as any)._id === id2) {
-                            const alreadyHasLink = b.linkedTestCaseIds?.some(linkedId => 
+                            const alreadyHasLink = b.linkedTestCaseIds?.some(linkedId =>
                                 String(linkedId) === String(id1)
                             );
                             if (!alreadyHasLink) {
@@ -349,7 +354,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             if (type1 === 'test' && type2 === 'bug') {
                 const testCase = testCases.find(t => t.id === id1 || (t as any)._id === id1);
                 if (testCase) {
-                    const newLinks = (testCase.linkedBugIds || []).filter(linkedId => 
+                    const newLinks = (testCase.linkedBugIds || []).filter(linkedId =>
                         String(linkedId) !== String(id2)
                     );
                     const res = await api.put(`/tests/${id1}`, { linkedBugIds: newLinks });
@@ -358,7 +363,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                     // Also update local bug state
                     setBugs(bugs.map(b => {
                         if (b.id === id2 || (b as any)._id === id2) {
-                            const newBugLinks = (b.linkedTestCaseIds || []).filter(linkedId => 
+                            const newBugLinks = (b.linkedTestCaseIds || []).filter(linkedId =>
                                 String(linkedId) !== String(id1)
                             );
                             return { ...b, linkedTestCaseIds: newBugLinks };
@@ -493,6 +498,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             notifications,
             comments,
             activeProjectId,
+            isLoading,
             setActiveProjectId: handleSetActiveProjectId,
             addProject,
             deleteProject,

@@ -7,6 +7,7 @@ import TestCaseActionModal from '../components/TestCaseActionModal';
 import { useState, useEffect } from 'react';
 import { getLatestTestRunsBatch } from '../lib/api';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PageLoadingSkeleton } from '../components/ui/Skeleton';
 
 interface TestRun {
     _id: string;
@@ -16,7 +17,7 @@ interface TestRun {
 }
 
 export default function TestCases() {
-    const { testCases, activeProjectId, updateTestCaseStatus } = useData();
+    const { testCases, activeProjectId, updateTestCaseStatus, isLoading } = useData();
     const { canCreateTestCases, canEditTestCases } = usePermissions();
     const [latestRuns, setLatestRuns] = useState<{ [key: string]: TestRun }>({});
     const [showFilters, setShowFilters] = useState(false);
@@ -121,6 +122,18 @@ export default function TestCases() {
         'In Progress': 'bg-blue-500/10 text-blue-500',
         'Todo': 'bg-slate-500/10 text-slate-500'
     };
+
+    // Show loading skeleton
+    if (isLoading) {
+        return (
+            <div className="space-y-6 pb-20">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold">Test Cases</h1>
+                </div>
+                <PageLoadingSkeleton type="cards" count={4} />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 pb-20">

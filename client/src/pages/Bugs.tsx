@@ -4,9 +4,10 @@ import { Link } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import StatusDropdown from '../components/StatusDropdown';
 import { useState } from 'react';
+import { PageLoadingSkeleton } from '../components/ui/Skeleton';
 
 export default function Bugs() {
-    const { bugs, activeProjectId, updateBugStatus } = useData();
+    const { bugs, activeProjectId, updateBugStatus, isLoading } = useData();
     const { canCreateBugs, canEditBugStatus } = usePermissions();
     const [showFilters, setShowFilters] = useState(false);
     const [filters, setFilters] = useState({
@@ -49,6 +50,18 @@ export default function Bugs() {
         'Closed': 'bg-slate-500/10 text-slate-500'
     };
 
+    // Show loading skeleton
+    if (isLoading) {
+        return (
+            <div className="space-y-6 pb-20">
+                <div className="flex items-center justify-between">
+                    <h1 className="text-2xl font-bold">Bugs</h1>
+                </div>
+                <PageLoadingSkeleton type="bugs" count={4} />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6 pb-20">
             <div className="flex items-center justify-between">
@@ -56,11 +69,10 @@ export default function Bugs() {
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowFilters(!showFilters)}
-                        className={`p-2 rounded-full transition-colors ${
-                            showFilters || filters.status.length > 0 || filters.severity.length > 0 || filters.tags.length > 0
+                        className={`p-2 rounded-full transition-colors ${showFilters || filters.status.length > 0 || filters.severity.length > 0 || filters.tags.length > 0
                                 ? 'bg-primary/20 text-primary'
                                 : 'bg-primary/10 text-primary hover:bg-primary/20'
-                        }`}
+                            }`}
                         title="Filter"
                     >
                         <Filter size={24} />
@@ -85,11 +97,10 @@ export default function Bugs() {
                                 <button
                                     key={status}
                                     onClick={() => toggleFilter('status', status)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                                        filters.status.includes(status)
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filters.status.includes(status)
                                             ? statusColors[status] + ' border-2 border-current'
                                             : 'bg-white/5 text-muted-foreground hover:bg-white/10'
-                                    }`}
+                                        }`}
                                 >
                                     {status}
                                 </button>
@@ -103,14 +114,13 @@ export default function Bugs() {
                                 <button
                                     key={severity}
                                     onClick={() => toggleFilter('severity', severity)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                                        filters.severity.includes(severity)
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filters.severity.includes(severity)
                                             ? (severity === 'Critical' ? 'bg-red-500/20 text-red-500' :
-                                               severity === 'High' ? 'bg-orange-500/20 text-orange-500' :
-                                               severity === 'Medium' ? 'bg-yellow-500/10 text-yellow-500' :
-                                               'bg-blue-500/10 text-blue-500') + ' border-2 border-current'
+                                                severity === 'High' ? 'bg-orange-500/20 text-orange-500' :
+                                                    severity === 'Medium' ? 'bg-yellow-500/10 text-yellow-500' :
+                                                        'bg-blue-500/10 text-blue-500') + ' border-2 border-current'
                                             : 'bg-white/5 text-muted-foreground hover:bg-white/10'
-                                    }`}
+                                        }`}
                                 >
                                     {severity}
                                 </button>
@@ -124,11 +134,10 @@ export default function Bugs() {
                                 <button
                                     key={tag}
                                     onClick={() => toggleFilter('tags', tag)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                                        filters.tags.includes(tag)
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filters.tags.includes(tag)
                                             ? 'bg-primary/20 text-primary border-2 border-primary'
                                             : 'bg-white/5 text-muted-foreground hover:bg-white/10'
-                                    }`}
+                                        }`}
                                 >
                                     {tag}
                                 </button>
