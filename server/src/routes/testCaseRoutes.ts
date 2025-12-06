@@ -7,7 +7,8 @@ import {
     duplicateTestCase,
     moveTestCase,
     bulkDuplicateTestCases,
-    bulkMoveTestCases
+    bulkMoveTestCases,
+    createTestCasesBulk
 } from '../controllers/testCaseController';
 import { auth } from '../middleware/auth';
 
@@ -17,6 +18,7 @@ router.get('/', auth, getTestCases);
 router.post('/', auth, createTestCase);
 
 // Bulk operations (must come BEFORE :id routes)
+router.post('/bulk', auth, createTestCasesBulk);
 router.post('/bulk/duplicate', auth, bulkDuplicateTestCases);
 router.patch('/bulk/move', auth, bulkMoveTestCases);
 

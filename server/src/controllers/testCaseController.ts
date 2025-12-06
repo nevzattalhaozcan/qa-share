@@ -267,9 +267,21 @@ export const bulkDuplicateTestCases = async (req: Request, res: Response) => {
 
         const duplicatedTestCases = [];
 
-        for (const original of originalTestCases) {
+        // Get the last friendly ID once to start the sequence
+        const lastItem = await TestCase.findOne({ friendlyId: { $regex: '^TC-' } }).sort({ createdAt: -1 });
+        let lastIdNum = 0;
+        if (lastItem && lastItem.friendlyId) {
+            lastIdNum = parseInt(lastItem.friendlyId.split('-')[1]);
+        }
+
+        const newTestCasesData = [];
+
+        for (let i = 0; i < originalTestCases.length; i++) {
+            const original = originalTestCases[i];
             const projectId = targetProjectId || original.projectId;
-            const friendlyId = await getNextFriendlyId(TestCase, 'TC');
+
+            lastIdNum++;
+            const friendlyId = `TC-${lastIdNum}`;
 
             const duplicateData = {
                 projectId,
@@ -285,13 +297,74 @@ export const bulkDuplicateTestCases = async (req: Request, res: Response) => {
                 linkedBugIds: [],
                 createdBy: userId,
             };
-
-            const newTestCase = new TestCase(duplicateData);
-            await newTestCase.save();
-            duplicatedTestCases.push(newTestCase);
+            newTestCasesData.push(duplicateData);
         }
 
-        res.json(duplicatedTestCases);
+        const newTestCases = await TestCase.insertMany(newTestCasesData);
+        res.json(newTestCases);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+
+// Create multiple test cases in bulk (API only)
+export const createTestCasesBulk = async (req: Request, res: Response) => {
+    try {
+        // @ts-ignore
+        const userId = req.user.user.id;
+        const testCasesData = req.body;
+
+        if (!Array.isArray(testCasesData) || testCasesData.length === 0) {
+            return res.status(400).json({ msg: 'Request body must be a non-empty array of test cases' });
+        }
+
+        // Get the last friendly ID once to start the sequence
+        const lastItem = await TestCase.findOne({ friendlyId: { $regex: '^TC-' } }).sort({ createdAt: -1 });
+        let lastIdNum = 0;
+        if (lastItem && lastItem.friendlyId) {
+            lastIdNum = parseInt(lastItem.friendlyId.split('-')[1]);
+        }
+
+        const testCasesToInsert = testCasesData.map((data: any) => {
+            lastIdNum++;
+            const friendlyId = `TC-${lastIdNum}`;
+
+            // Ensure linkedBugIds is unique if present
+            let linkedBugIds: string[] = [];
+            if (data.linkedBugIds && Array.isArray(data.linkedBugIds)) {
+                linkedBugIds = [...new Set(data.linkedBugIds.map((id: any) => String(id)))] as string[];
+            }
+
+            return {
+                ...data,
+                createdBy: userId,
+                friendlyId,
+                linkedBugIds
+            };
+        });
+
+        const newTestCases = await TestCase.insertMany(testCasesToInsert);
+
+        // Handle linking for each created test case
+        // This effectively links bugs to the new test cases in bulk
+        const bulkOps = [];
+        for (const testCase of newTestCases) {
+            if (testCase.linkedBugIds && testCase.linkedBugIds.length > 0) {
+                bulkOps.push({
+                    updateMany: {
+                        filter: { _id: { $in: testCase.linkedBugIds } },
+                        update: { $addToSet: { linkedTestCaseIds: testCase._id } }
+                    }
+                });
+            }
+        }
+
+        if (bulkOps.length > 0) {
+            await Bug.bulkWrite(bulkOps);
+        }
+
+        res.json(newTestCases);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
