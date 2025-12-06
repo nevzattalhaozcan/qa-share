@@ -3,14 +3,14 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff, Eye } from 'lucide-react';
+import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff, Eye, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Helper function to convert URLs to clickable links
 const linkifyText = (text: string) => {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
-    
+
     return parts.map((part, index) => {
         if (part.match(urlRegex)) {
             return (
@@ -37,6 +37,7 @@ export default function Notes() {
     const [content, setContent] = useState('');
     const [label, setLabel] = useState('');
     const [copiedId, setCopiedId] = useState<string | null>(null);
+    const [selectedNote, setSelectedNote] = useState<typeof notes[0] | null>(null);
 
     const isQA = user?.role === 'QA';
 
@@ -153,22 +154,23 @@ export default function Notes() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
-                                className={`glass-card rounded-xl overflow-hidden ${
-                                    note.pinned ? 'ring-2 ring-primary/30' : ''
-                                } ${
-                                    note.hidden ? 'opacity-50' : ''
-                                }`}
+                                className={`glass-card rounded-xl overflow-hidden ${note.pinned ? 'ring-2 ring-primary/30' : ''
+                                    } ${note.hidden ? 'opacity-50' : ''
+                                    }`}
                             >
                                 {/* Note Header with actions */}
                                 <div className="flex items-center justify-between gap-2 px-3 py-2 bg-white/5 border-b border-white/10">
                                     <div className="flex items-center gap-2 min-w-0">
                                         {note.type === 'kv' && (
-                                            <>
+                                            <button
+                                                onClick={() => setSelectedNote(note)}
+                                                className="flex items-center gap-2 min-w-0 hover:bg-white/5 p-1 -ml-1 rounded transition-colors group"
+                                            >
                                                 <Key size={14} className="text-primary flex-shrink-0" />
-                                                <span className="text-xs font-bold text-primary tracking-wider truncate">
+                                                <span className="text-xs font-bold text-primary tracking-wider truncate group-hover:underline">
                                                     {note.label}
                                                 </span>
-                                            </>
+                                            </button>
                                         )}
                                         {note.type === 'simple' && (
                                             <span className="text-xs text-muted-foreground">Quick Note</span>
@@ -179,14 +181,13 @@ export default function Notes() {
                                             </span>
                                         )}
                                     </div>
-                                    
+
                                     {/* Action Buttons - Always visible on mobile, hover on desktop */}
                                     <div className="flex items-center gap-0.5">
                                         <button
                                             onClick={() => handleTogglePin(noteId, note.pinned || false)}
-                                            className={`p-1.5 hover:bg-white/10 rounded-md transition-colors ${
-                                                note.pinned ? 'text-primary' : 'text-slate-400 hover:text-white'
-                                            }`}
+                                            className={`p-1.5 hover:bg-white/10 rounded-md transition-colors ${note.pinned ? 'text-primary' : 'text-slate-400 hover:text-white'
+                                                }`}
                                             title={note.pinned ? 'Unpin' : 'Pin to top'}
                                         >
                                             <Pin size={14} className={note.pinned ? 'fill-current' : ''} />
@@ -212,9 +213,8 @@ export default function Notes() {
                                         {isQA && (
                                             <button
                                                 onClick={() => handleToggleHide(noteId, note.hidden || false)}
-                                                className={`p-1.5 hover:bg-yellow-500/20 rounded-md transition-colors ${
-                                                    note.hidden ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-400'
-                                                }`}
+                                                className={`p-1.5 hover:bg-yellow-500/20 rounded-md transition-colors ${note.hidden ? 'text-yellow-400' : 'text-slate-400 hover:text-yellow-400'
+                                                    }`}
                                                 title={note.hidden ? 'Unhide note' : 'Hide note from DEV users'}
                                             >
                                                 {note.hidden ? <Eye size={14} /> : <EyeOff size={14} />}
@@ -247,6 +247,107 @@ export default function Notes() {
                     </div>
                 )}
             </div>
+
+            {/* Note Detail Modal */}
+            <AnimatePresence>
+                {selectedNote && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setSelectedNote(null)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-[100] max-w-md mx-auto"
+                        >
+                            <div className="glass-card rounded-2xl p-6 shadow-2xl border border-white/10 space-y-6">
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2 text-primary mb-2">
+                                            <Key size={16} />
+                                            <span className="text-xs font-bold tracking-wider uppercase opacity-80">Key</span>
+                                        </div>
+                                        <h3 className="text-xl font-bold break-words">{selectedNote.label}</h3>
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedNote(null)}
+                                        className="p-2 hover:bg-white/10 rounded-full transition-colors text-muted-foreground hover:text-white"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-2 bg-black/20 p-4 rounded-xl border border-white/5">
+                                    <div className="flex items-center justify-between text-muted-foreground mb-1">
+                                        <span className="text-xs font-bold tracking-wider uppercase opacity-80">Value</span>
+                                        <button
+                                            onClick={() => handleCopy('modal-val', selectedNote.content)}
+                                            className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-xs flex items-center gap-1"
+                                        >
+                                            {copiedId === 'modal-val' ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
+                                            Copy
+                                        </button>
+                                    </div>
+                                    <p className="text-base font-mono text-white whitespace-pre-wrap break-words">
+                                        {linkifyText(selectedNote.content)}
+                                    </p>
+                                </div>
+
+                                <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+                                    <button
+                                        onClick={() => {
+                                            const noteId = (selectedNote as any)._id || selectedNote.id;
+                                            handleTogglePin(noteId, selectedNote.pinned || false);
+                                            setSelectedNote(null);
+                                        }}
+                                        className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all ${selectedNote.pinned
+                                                ? 'bg-primary/20 text-primary border border-primary/20 hover:bg-primary/30'
+                                                : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                                            }`}
+                                    >
+                                        <Pin size={18} className={selectedNote.pinned ? 'fill-current' : ''} />
+                                        {selectedNote.pinned ? 'Unpin' : 'Pin'}
+                                    </button>
+
+                                    {isQA && (
+                                        <button
+                                            onClick={() => {
+                                                const noteId = (selectedNote as any)._id || selectedNote.id;
+                                                handleToggleHide(noteId, selectedNote.hidden || false);
+                                                setSelectedNote(null);
+                                            }}
+                                            className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium transition-all ${selectedNote.hidden
+                                                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/20 hover:bg-yellow-500/30'
+                                                    : 'bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white'
+                                                }`}
+                                        >
+                                            {selectedNote.hidden ? <Eye size={18} /> : <EyeOff size={18} />}
+                                            {selectedNote.hidden ? 'Unhide' : 'Hide'}
+                                        </button>
+                                    )}
+
+                                    <button
+                                        onClick={() => {
+                                            const noteId = (selectedNote as any)._id || selectedNote.id;
+                                            deleteNote(noteId);
+                                            setSelectedNote(null);
+                                        }}
+                                        className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20 transition-all"
+                                    >
+                                        <Trash2 size={18} />
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
