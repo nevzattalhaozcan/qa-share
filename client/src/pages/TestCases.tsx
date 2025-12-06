@@ -1,5 +1,5 @@
 import { useData } from '../context/DataContext';
-import { Plus, RotateCcw, Filter, CheckSquare, Square, X } from 'lucide-react';
+import { Plus, RotateCcw, Filter, CheckSquare, Square, X, ArrowUpDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import StatusDropdown from '../components/StatusDropdown';
@@ -29,6 +29,7 @@ export default function TestCases() {
         status: [] as string[],
         priority: [] as string[],
         search: '',
+        sort: 'newest' // Default sort
     });
 
     // Persist scroll position
@@ -38,6 +39,7 @@ export default function TestCases() {
     const [selectionMode, setSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [showActionModal, setShowActionModal] = useState(false);
+    const [showSortMenu, setShowSortMenu] = useState(false);
 
     const projectTestCases = testCases.filter(t => String(t.projectId) === String(activeProjectId));
 
@@ -93,6 +95,14 @@ export default function TestCases() {
         exitSelectionMode();
     };
 
+    const statusPriority = {
+        'Fail': 0,
+        'Pass': 1,
+        'In Progress': 2,
+        'Todo': 3,
+        'Draft': 4
+    };
+
     const filteredTestCases = projectTestCases.filter(test => {
         const testId = (test as any)._id || test.id;
         const latestRun = latestRuns[testId];
@@ -117,6 +127,25 @@ export default function TestCases() {
         }
 
         return true;
+    }).sort((a, b) => {
+        const testIdA = (a as any)._id || a.id;
+        const testIdB = (b as any)._id || b.id;
+        const statusA = latestRuns[testIdA]?.status || a.status;
+        const statusB = latestRuns[testIdB]?.status || b.status;
+
+        switch (filters.sort) {
+            case 'oldest':
+                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            case 'status':
+                return (statusPriority[statusA as keyof typeof statusPriority] || 99) -
+                    (statusPriority[statusB as keyof typeof statusPriority] || 99);
+            case 'id':
+                // Natural sort (TC-2 before TC-10)
+                return (a.friendlyId || '').localeCompare(b.friendlyId || '', undefined, { numeric: true });
+            case 'newest':
+            default:
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
     });
 
     const statusColors: Record<string, string> = {
@@ -157,6 +186,61 @@ export default function TestCases() {
                             {selectionMode ? <X size={24} /> : <CheckSquare size={24} />}
                         </button>
                     )}
+
+                    {/* Sort Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowSortMenu(!showSortMenu)}
+                            className={`p-2 rounded-full transition-colors ${filters.sort !== 'newest'
+                                ? 'bg-primary/20 text-primary'
+                                : 'bg-primary/10 text-primary hover:bg-primary/20'
+                                }`}
+                            title="Sort"
+                        >
+                            <ArrowUpDown size={24} />
+                        </button>
+
+                        <AnimatePresence>
+                            {showSortMenu && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setShowSortMenu(false)}
+                                    />
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        className="absolute right-0 top-full mt-2 w-40 glass-card rounded-xl border border-white/10 shadow-xl z-50 overflow-hidden"
+                                    >
+                                        <div className="p-1 space-y-0.5">
+                                            {[
+                                                { label: 'Newest First', value: 'newest' },
+                                                { label: 'Oldest First', value: 'oldest' },
+                                                { label: 'By Status', value: 'status' },
+                                                { label: 'By ID', value: 'id' },
+                                            ].map((option) => (
+                                                <button
+                                                    key={option.value}
+                                                    onClick={() => {
+                                                        updateFilter('sort', option.value);
+                                                        setShowSortMenu(false);
+                                                    }}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${filters.sort === option.value
+                                                            ? 'bg-primary/20 text-primary font-medium'
+                                                            : 'text-muted-foreground hover:bg-white/5 hover:text-white'
+                                                        }`}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
                     <button
                         onClick={() => setShowFilters(!showFilters)}
                         className={`p-2 rounded-full transition-colors ${showFilters || filters.status.length > 0 || filters.priority.length > 0 || !!filters.search

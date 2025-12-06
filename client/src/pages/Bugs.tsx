@@ -1,5 +1,5 @@
 import { useData } from '../context/DataContext';
-import { Plus, Filter, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Filter, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import StatusDropdown from '../components/StatusDropdown';
@@ -14,12 +14,14 @@ export default function Bugs() {
     const { canCreateBugs, canEditBugStatus } = usePermissions();
     const [showFilters, setShowFilters] = useState(false);
     const [showClosedBugs, setShowClosedBugs] = useState(false);
+    const [showSortMenu, setShowSortMenu] = useState(false);
 
     // Persist filters to URL
-    const { filters, toggleFilter } = useUrlFilters({
+    const { filters, toggleFilter, updateFilter } = useUrlFilters({
         status: [] as string[],
         severity: [] as string[],
         tags: [] as string[],
+        sort: 'newest' // Default sort
     });
 
     // Persist scroll position
@@ -30,6 +32,13 @@ export default function Bugs() {
     // Split bugs into active and closed
     const activeBugs = projectBugs.filter(b => b.status !== 'Closed');
     const closedBugs = projectBugs.filter(b => b.status === 'Closed');
+
+    const statusPriority = {
+        'Opened': 0,
+        'Draft': 1,
+        'Fixed': 2,
+        'Closed': 3
+    };
 
     // Filter only active bugs
     const filteredActiveBugs = activeBugs.filter(bug => {
@@ -46,6 +55,20 @@ export default function Bugs() {
             }
         }
         return true;
+    }).sort((a, b) => {
+        switch (filters.sort) {
+            case 'oldest':
+                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+            case 'status':
+                return (statusPriority[a.status as keyof typeof statusPriority] || 99) -
+                    (statusPriority[b.status as keyof typeof statusPriority] || 99);
+            case 'id':
+                // Natural sort (BUG-2 before BUG-10)
+                return (a.friendlyId || '').localeCompare(b.friendlyId || '', undefined, { numeric: true });
+            case 'newest':
+            default:
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
     });
 
     const statusColors: Record<string, string> = {
@@ -110,6 +133,60 @@ export default function Bugs() {
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Bugs</h1>
                 <div className="flex items-center gap-2">
+                    {/* Sort Dropdown */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setShowSortMenu(!showSortMenu)}
+                            className={`p-2 rounded-full transition-colors ${filters.sort !== 'newest'
+                                ? 'bg-primary/20 text-primary'
+                                : 'bg-primary/10 text-primary hover:bg-primary/20'
+                                }`}
+                            title="Sort"
+                        >
+                            <ArrowUpDown size={24} />
+                        </button>
+
+                        <AnimatePresence>
+                            {showSortMenu && (
+                                <>
+                                    <div
+                                        className="fixed inset-0 z-40"
+                                        onClick={() => setShowSortMenu(false)}
+                                    />
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                        className="absolute right-0 top-full mt-2 w-40 glass-card rounded-xl border border-white/10 shadow-xl z-50 overflow-hidden"
+                                    >
+                                        <div className="p-1 space-y-0.5">
+                                            {[
+                                                { label: 'Newest First', value: 'newest' },
+                                                { label: 'Oldest First', value: 'oldest' },
+                                                { label: 'By Status', value: 'status' },
+                                                { label: 'By ID', value: 'id' },
+                                            ].map((option) => (
+                                                <button
+                                                    key={option.value}
+                                                    onClick={() => {
+                                                        updateFilter('sort', option.value);
+                                                        setShowSortMenu(false);
+                                                    }}
+                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${filters.sort === option.value
+                                                            ? 'bg-primary/20 text-primary font-medium'
+                                                            : 'text-muted-foreground hover:bg-white/5 hover:text-white'
+                                                        }`}
+                                                >
+                                                    {option.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                </>
+                            )}
+                        </AnimatePresence>
+                    </div>
+
                     <button
                         onClick={() => setShowFilters(!showFilters)}
                         className={`p-2 rounded-full transition-colors ${showFilters || filters.status.length > 0 || filters.severity.length > 0 || filters.tags.length > 0
