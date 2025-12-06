@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { createHashRouter, RouterProvider, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import Login from "./pages/Login";
@@ -30,7 +30,7 @@ const ProtectedRoute = () => {
   return <Layout />;
 };
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/role-select",
     element: <RoleSelect />,
