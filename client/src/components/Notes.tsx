@@ -40,6 +40,9 @@ export default function Notes() {
     const [selectedNote, setSelectedNote] = useState<typeof notes[0] | null>(null);
     const [isEditing, setIsEditing] = useState(false);
 
+    // New state to track how the modal was opened (View vs Edit)
+    const [openedInEditMode, setOpenedInEditMode] = useState(false);
+
     // Edit form state
     const [editLabel, setEditLabel] = useState('');
     const [editContent, setEditContent] = useState('');
@@ -53,6 +56,7 @@ export default function Notes() {
             setEditContent(selectedNote.content);
         } else {
             setIsEditing(false);
+            setOpenedInEditMode(false);
             setEditLabel('');
             setEditContent('');
         }
@@ -99,6 +103,20 @@ export default function Notes() {
                 label: selectedNote.type === 'kv' ? editLabel.trim() : prev.label
             }) : null);
 
+            // If opened directly in edit mode, close the modal on save
+            if (openedInEditMode) {
+                setSelectedNote(null);
+            } else {
+                setIsEditing(false);
+            }
+        }
+    };
+
+    const handleCancelEdit = () => {
+        // If opened directly in edit mode, close the modal on cancel
+        if (openedInEditMode) {
+            setSelectedNote(null);
+        } else {
             setIsEditing(false);
         }
     };
@@ -199,7 +217,11 @@ export default function Notes() {
                                     <div className="flex items-center gap-2 min-w-0">
                                         {note.type === 'kv' && (
                                             <button
-                                                onClick={() => setSelectedNote(note)}
+                                                onClick={() => {
+                                                    setSelectedNote(note);
+                                                    setOpenedInEditMode(false);
+                                                    setIsEditing(false);
+                                                }}
                                                 className="flex items-center gap-2 min-w-0 hover:bg-white/5 p-1 -ml-1 rounded transition-colors group"
                                             >
                                                 <Key size={14} className="text-primary flex-shrink-0" />
@@ -218,6 +240,7 @@ export default function Notes() {
                                         <button
                                             onClick={() => {
                                                 setSelectedNote(note);
+                                                setOpenedInEditMode(true);
                                                 setIsEditing(true);
                                             }}
                                             className="p-1.5 hover:bg-white/10 rounded-md transition-colors text-slate-400 hover:text-white"
@@ -293,21 +316,24 @@ export default function Notes() {
             <AnimatePresence>
                 {selectedNote && (
                     <>
+                        {/* Backdrop - Increased z-index to 9990 */}
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setSelectedNote(null)}
-                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]"
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9990]"
                         />
+                        {/* Modal Container - Increased z-index to 9999 */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-[100] max-w-md mx-auto"
+                            className="fixed left-4 right-4 top-1/2 -translate-y-1/2 z-[9999] max-w-md mx-auto"
                         >
-                            <div className="glass-card rounded-2xl p-6 shadow-2xl border border-white/10 space-y-6">
-                                <div className="flex items-start justify-between gap-4">
+                            {/* Glass Card - Added max-height, scrolling, and adjusted padding */}
+                            <div className="glass-card rounded-2xl p-5 shadow-2xl border border-white/10 space-y-5 max-h-[85vh] overflow-y-auto flex flex-col">
+                                <div className="flex items-start justify-between gap-4 flex-shrink-0">
                                     <div className="space-y-1 w-full">
                                         <div className="flex items-center gap-2 text-primary mb-2">
                                             <Key size={16} />
@@ -347,7 +373,7 @@ export default function Notes() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-2 bg-black/20 p-4 rounded-xl border border-white/5">
+                                <div className="space-y-2 bg-black/20 p-4 rounded-xl border border-white/5 flex-grow overflow-y-auto">
                                     <div className="flex items-center justify-between text-muted-foreground mb-1">
                                         <span className="text-xs font-bold tracking-wider uppercase opacity-80">Value</span>
                                         {!isEditing && (
@@ -374,11 +400,11 @@ export default function Notes() {
                                     )}
                                 </div>
 
-                                <div className="flex gap-2 pt-2 border-t border-white/5">
+                                <div className="flex gap-2 pt-2 border-t border-white/5 flex-shrink-0">
                                     {isEditing ? (
                                         <>
                                             <button
-                                                onClick={() => setIsEditing(false)}
+                                                onClick={handleCancelEdit}
                                                 className="flex-1 p-3 rounded-xl font-medium bg-white/5 text-muted-foreground hover:bg-white/10 hover:text-white transition-all"
                                             >
                                                 Cancel
@@ -389,7 +415,7 @@ export default function Notes() {
                                                 className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl font-medium bg-primary text-white hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 <Save size={18} />
-                                                Save Changes
+                                                Save
                                             </button>
                                         </>
                                     ) : (
