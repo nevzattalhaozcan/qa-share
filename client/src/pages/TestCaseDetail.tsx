@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { ArrowLeft, Edit, Link as LinkIcon, Bug as BugIcon, Trash2, X, PlayCircle } from 'lucide-react';
+import { ArrowLeft, Edit, Link as LinkIcon, Bug as BugIcon, Trash2, X, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
 import LinkSelector from '../components/LinkSelector';
@@ -25,7 +25,8 @@ interface TestRun {
 export default function TestCaseDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { testCases, bugs, linkItems, unlinkItems, deleteTestCase } = useData();
+    const location = useLocation();
+    const { testCases, bugs, linkItems, unlinkItems, deleteTestCase, activeProjectId } = useData();
     const { canEditTestCases } = usePermissions();
     const { user } = useAuth();
     const [showLinkSelector, setShowLinkSelector] = useState(false);
@@ -33,6 +34,15 @@ export default function TestCaseDetail() {
     const [testRuns, setTestRuns] = useState<TestRun[]>([]);
 
     const testCase = testCases.find(t => t.id === id || (t as any)._id === id);
+
+    // Calculate Next/Previous Test Cases
+    const sortedTestCases = testCases
+        .filter(t => String(t.projectId) === String(activeProjectId))
+        .sort((a, b) => (a.friendlyId || '').localeCompare(b.friendlyId || '', undefined, { numeric: true }));
+
+    const currentIndex = sortedTestCases.findIndex(t => t.id === id || (t as any)._id === id);
+    const prevTestCase = currentIndex > 0 ? sortedTestCases[currentIndex - 1] : null;
+    const nextTestCase = currentIndex !== -1 && currentIndex < sortedTestCases.length - 1 ? sortedTestCases[currentIndex + 1] : null;
 
     useEffect(() => {
         const fetchTestRuns = async () => {
@@ -45,7 +55,7 @@ export default function TestCaseDetail() {
                 console.error('Error fetching test runs:', error);
             }
         };
-        
+
         fetchTestRuns();
     }, [testCase?.id, (testCase as any)?._id]);
 
@@ -60,10 +70,14 @@ export default function TestCaseDetail() {
 
     const linkedBugs = bugs.filter(b => {
         const bugId = (b as any)._id || b.id;
-        return testCase.linkedBugIds?.some(linkedId => 
+        return testCase.linkedBugIds?.some(linkedId =>
             String(linkedId) === String(bugId)
         );
     });
+
+    const navigateToTest = (testId: string) => {
+        navigate(`/tests/${testId}`, { state: { from: location.state?.from } });
+    };
 
     return (
         <div className="space-y-4 pb-20">
@@ -71,9 +85,39 @@ export default function TestCaseDetail() {
             <div className="glass-card p-4 rounded-2xl">
                 {/* Top Row - Action Buttons */}
                 <div className="flex items-center justify-between mb-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/tests')}>
-                        <ArrowLeft size={24} />
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => {
+                            if (location.state?.from) {
+                                navigate(location.state.from.pathname + location.state.from.search);
+                            } else {
+                                navigate('/tests');
+                            }
+                        }} title="Back to List">
+                            <ArrowLeft size={24} />
+                        </Button>
+                        <div className="h-6 w-px bg-white/10 mx-1" />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => prevTestCase && navigateToTest((prevTestCase as any)._id || prevTestCase.id)}
+                            disabled={!prevTestCase}
+                            title={prevTestCase ? `Previous: ${prevTestCase.friendlyId || 'Test'}` : 'No previous test'}
+                            className={!prevTestCase ? 'opacity-30' : ''}
+                        >
+                            <ChevronLeft size={24} />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => nextTestCase && navigateToTest((nextTestCase as any)._id || nextTestCase.id)}
+                            disabled={!nextTestCase}
+                            title={nextTestCase ? `Next: ${nextTestCase.friendlyId || 'Test'}` : 'No next test'}
+                            className={!nextTestCase ? 'opacity-30' : ''}
+                        >
+                            <ChevronRight size={24} />
+                        </Button>
+                    </div>
+
                     {canEditTestCases && (
                         <div className="flex items-center gap-1">
                             <Button variant="ghost" size="icon" onClick={() => {
@@ -92,7 +136,7 @@ export default function TestCaseDetail() {
                         </div>
                     )}
                 </div>
-                
+
                 {/* Middle - ID and Title */}
                 <div className="space-y-2 mb-4">
                     {testCase.friendlyId && (
@@ -102,23 +146,21 @@ export default function TestCaseDetail() {
                     )}
                     <h1 className="text-2xl font-bold break-words leading-tight">{testCase.title}</h1>
                 </div>
-                
+
                 {/* Bottom Row - Priority and Status */}
                 <div className="flex items-center justify-between">
-                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                        testCase.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${testCase.priority === 'High' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
                         testCase.priority === 'Medium' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                        'bg-green-500/20 text-green-400 border border-green-500/30'
-                    }`}>
+                            'bg-green-500/20 text-green-400 border border-green-500/30'
+                        }`}>
                         {testCase.priority} Priority
                     </span>
-                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
-                        testCase.status === 'Pass' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
+                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${testCase.status === 'Pass' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
                         testCase.status === 'Fail' ? 'bg-red-500/20 text-red-400 border-red-500/30' :
-                        testCase.status === 'In Progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                        testCase.status === 'Draft' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' :
-                        'bg-slate-500/20 text-slate-400 border-slate-500/30'
-                    }`}>
+                            testCase.status === 'In Progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
+                                testCase.status === 'Draft' ? 'bg-gray-500/20 text-gray-400 border-gray-500/30' :
+                                    'bg-slate-500/20 text-slate-400 border-slate-500/30'
+                        }`}>
                         {testCase.status}
                     </span>
                 </div>
@@ -153,7 +195,7 @@ export default function TestCaseDetail() {
                 <div className="space-y-3">
                     <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Steps</h3>
                     <div className="bg-slate-900/50 p-5 rounded-xl border border-white/10">
-                        <div 
+                        <div
                             className="whitespace-pre-wrap font-mono text-sm leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: formatListText(testCase.steps) }}
                         />
@@ -191,7 +233,7 @@ export default function TestCaseDetail() {
                                 const bugLinkId = (bug as any)._id || bug.id;
                                 const testCaseId = (testCase as any)._id || testCase.id;
                                 const canUnlinkBug = user?.role === 'QA' || bug.createdBy === user?.id;
-                                
+
                                 return (
                                     <div key={bugLinkId} className="relative group">
                                         <Link to={`/bugs/${bugLinkId}`} className="block bg-white/5 hover:bg-white/10 p-3 rounded-lg border border-white/5 transition-colors">
@@ -238,19 +280,18 @@ export default function TestCaseDetail() {
                     </h3>
                     <div className="space-y-2">
                         {testRuns.map((run) => (
-                            <div 
-                                key={run._id} 
+                            <div
+                                key={run._id}
                                 className="bg-white/5 p-3 rounded-lg border border-white/5 flex items-center justify-between"
                             >
                                 <div className="flex items-center gap-3">
                                     <span className="font-mono text-xs text-primary bg-primary/10 px-2 py-1 rounded">
                                         {run.runId}
                                     </span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                        run.status === 'Pass' 
-                                            ? 'bg-green-500/10 text-green-500' 
-                                            : 'bg-red-500/10 text-red-500'
-                                    }`}>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${run.status === 'Pass'
+                                        ? 'bg-green-500/10 text-green-500'
+                                        : 'bg-red-500/10 text-red-500'
+                                        }`}>
                                         {run.status}
                                     </span>
                                 </div>

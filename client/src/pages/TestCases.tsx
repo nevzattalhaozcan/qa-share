@@ -1,6 +1,6 @@
 import { useData } from '../context/DataContext';
 import { Plus, RotateCcw, Filter, CheckSquare, Square, X, ArrowUpDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import StatusDropdown from '../components/StatusDropdown';
 import TestCaseActionModal from '../components/TestCaseActionModal';
@@ -19,6 +19,7 @@ interface TestRun {
 }
 
 export default function TestCases() {
+    const location = useLocation();
     const { testCases, activeProjectId, updateTestCaseStatus, isLoading } = useData();
     const { canCreateTestCases, canEditTestCases } = usePermissions();
     const [latestRuns, setLatestRuns] = useState<{ [key: string]: TestRun }>({});
@@ -227,8 +228,8 @@ export default function TestCases() {
                                                         setShowSortMenu(false);
                                                     }}
                                                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${filters.sort === option.value
-                                                            ? 'bg-primary/20 text-primary font-medium'
-                                                            : 'text-muted-foreground hover:bg-white/5 hover:text-white'
+                                                        ? 'bg-primary/20 text-primary font-medium'
+                                                        : 'text-muted-foreground hover:bg-white/5 hover:text-white'
                                                         }`}
                                                 >
                                                     {option.label}
@@ -407,7 +408,7 @@ export default function TestCases() {
                                     </div>
                                 ) : (
                                     // Normal link behavior
-                                    <Link to={`/tests/${testId}`} className="block">
+                                    <Link to={`/tests/${testId}`} state={{ from: location }} className="block">
                                         <div className="flex items-start justify-between">
                                             <div className="flex-1">
                                                 {test.friendlyId && (

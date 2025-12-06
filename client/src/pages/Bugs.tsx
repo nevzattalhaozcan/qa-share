@@ -1,6 +1,6 @@
 import { useData } from '../context/DataContext';
 import { Plus, Filter, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import StatusDropdown from '../components/StatusDropdown';
 import { useState } from 'react';
@@ -12,6 +12,7 @@ import { useScrollPosition } from '../hooks/useScrollPosition';
 export default function Bugs() {
     const { bugs, activeProjectId, updateBugStatus, isLoading } = useData();
     const { canCreateBugs, canEditBugStatus } = usePermissions();
+    const location = useLocation();
     const [showFilters, setShowFilters] = useState(false);
     const [showClosedBugs, setShowClosedBugs] = useState(false);
     const [showSortMenu, setShowSortMenu] = useState(false);
@@ -94,7 +95,7 @@ export default function Bugs() {
         const bugId = (bug as any)._id || bug.id;
         return (
             <div key={bugId} className="glass-card p-4 rounded-xl space-y-2 hover:bg-white/5 transition-colors relative hover:z-50">
-                <Link to={`/bugs/${bugId}`} className="block">
+                <Link to={`/bugs/${bugId}`} state={{ from: location }} className="block">
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
                             {bug.friendlyId && (
@@ -173,8 +174,8 @@ export default function Bugs() {
                                                         setShowSortMenu(false);
                                                     }}
                                                     className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${filters.sort === option.value
-                                                            ? 'bg-primary/20 text-primary font-medium'
-                                                            : 'text-muted-foreground hover:bg-white/5 hover:text-white'
+                                                        ? 'bg-primary/20 text-primary font-medium'
+                                                        : 'text-muted-foreground hover:bg-white/5 hover:text-white'
                                                         }`}
                                                 >
                                                     {option.label}

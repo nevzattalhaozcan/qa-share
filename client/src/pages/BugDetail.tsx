@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -15,6 +15,7 @@ import { formatListText } from '../lib/utils';
 export default function BugDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { bugs, testCases, updateBugStatus, linkItems, unlinkItems, deleteBug, updateBug } = useData();
     const { canEditBugStatus, canEditBugs } = usePermissions();
     const { user } = useAuth();
@@ -23,10 +24,10 @@ export default function BugDetail() {
     const [viewerAttachment, setViewerAttachment] = useState<{ url: string; type: 'image' | 'video' | 'file'; index: number } | null>(null);
 
     const bug = bugs.find(b => b.id === id || (b as any)._id === id);
-    
+
     // Check if current user can delete this bug (created by them or is QA)
     const canDeleteBug = user?.role === 'QA' || bug?.createdBy === user?.id;
-    
+
     // Check if current user can link test cases (QA or bug creator)
     const canLinkTestCase = user?.role === 'QA' || bug?.createdBy === user?.id;
 
@@ -63,10 +64,10 @@ export default function BugDetail() {
     // Handle swipe navigation
     const handleSwipe = (direction: 'left' | 'right') => {
         if (!viewerAttachment || !bug) return;
-        
+
         const attachments = bug.attachments || [];
         const currentIndex = viewerAttachment.index;
-        
+
         if (direction === 'right' && currentIndex > 0) {
             // Previous attachment
             const prevUrl = attachments[currentIndex - 1];
@@ -98,7 +99,7 @@ export default function BugDetail() {
 
     const linkedTestCases = testCases.filter(t => {
         const testId = (t as any)._id || t.id;
-        return bug.linkedTestCaseIds?.some(linkedId => 
+        return bug.linkedTestCaseIds?.some(linkedId =>
             String(linkedId) === String(testId)
         );
     });
@@ -114,7 +115,13 @@ export default function BugDetail() {
             <div className="glass-card p-4 rounded-2xl">
                 {/* Top Row - Action Buttons */}
                 <div className="flex items-center justify-between mb-4">
-                    <Button variant="ghost" size="icon" onClick={() => navigate('/bugs')}>
+                    <Button variant="ghost" size="icon" onClick={() => {
+                        if (location.state?.from) {
+                            navigate(location.state.from.pathname + location.state.from.search);
+                        } else {
+                            navigate('/bugs');
+                        }
+                    }}>
                         <ArrowLeft size={24} />
                     </Button>
                     <div className="flex items-center gap-1">
@@ -137,7 +144,7 @@ export default function BugDetail() {
                         )}
                     </div>
                 </div>
-                
+
                 {/* Middle - ID and Title */}
                 <div className="space-y-2 mb-4">
                     {bug.friendlyId && (
@@ -147,14 +154,13 @@ export default function BugDetail() {
                     )}
                     <h1 className="text-2xl font-bold break-words leading-tight">{bug.title}</h1>
                 </div>
-                
+
                 {/* Bottom Row - Severity and Status */}
                 <div className="flex items-center justify-between">
-                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
-                        bug.severity === 'Critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                        bug.severity === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                        'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                    }`}>
+                    <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${bug.severity === 'Critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                            bug.severity === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                                'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        }`}>
                         {bug.severity} Severity
                     </span>
                     <StatusDropdown
@@ -193,7 +199,7 @@ export default function BugDetail() {
                 <div className="space-y-3">
                     <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Steps to Reproduce</h3>
                     <div className="bg-slate-900/50 p-5 rounded-xl border border-white/10">
-                        <div 
+                        <div
                             className="whitespace-pre-wrap font-mono text-sm leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: formatListText(bug.stepsToReproduce) }}
                         />
@@ -232,11 +238,11 @@ export default function BugDetail() {
                                     const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
                                     const isVideo = /\.(mp4|webm|mov)$/i.test(url);
                                     return (
-                                        <div 
-                                            key={index} 
+                                        <div
+                                            key={index}
                                             className="relative w-24 h-24 rounded-lg overflow-hidden border border-white/10 bg-slate-800/50 cursor-pointer hover:border-primary/50 transition-colors group flex-shrink-0"
-                                            onClick={() => setViewerAttachment({ 
-                                                url, 
+                                            onClick={() => setViewerAttachment({
+                                                url,
                                                 type: isImage ? 'image' : isVideo ? 'video' : 'file',
                                                 index
                                             })}
@@ -246,8 +252,8 @@ export default function BugDetail() {
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         const bugId = (bug as any)._id || bug.id;
-                                                        updateBug(bugId, { 
-                                                            attachments: bug.attachments.filter(u => u !== url) 
+                                                        updateBug(bugId, {
+                                                            attachments: bug.attachments.filter(u => u !== url)
                                                         });
                                                     }}
                                                     className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 rounded-full text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
@@ -257,9 +263,9 @@ export default function BugDetail() {
                                                 </button>
                                             )}
                                             {isImage ? (
-                                                <img 
-                                                    src={url} 
-                                                    alt={`Attachment ${index + 1}`} 
+                                                <img
+                                                    src={url}
+                                                    alt={`Attachment ${index + 1}`}
                                                     className="w-full h-full object-cover"
                                                     onError={(e) => {
                                                         e.currentTarget.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><text x="50%" y="50%" text-anchor="middle" fill="gray">Image not found</text></svg>';
@@ -267,8 +273,8 @@ export default function BugDetail() {
                                                 />
                                             ) : isVideo ? (
                                                 <div className="relative w-full h-full bg-black/50">
-                                                    <video 
-                                                        src={url} 
+                                                    <video
+                                                        src={url}
                                                         className="w-full h-full object-cover"
                                                         preload="metadata"
                                                     />
@@ -392,7 +398,7 @@ export default function BugDetail() {
             {/* Attachment Viewer Modal */}
             <AnimatePresence>
                 {viewerAttachment && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -432,7 +438,7 @@ export default function BugDetail() {
                                 <ChevronLeft size={32} />
                             </button>
                         )}
-                        
+
                         {bug && bug.attachments && viewerAttachment.index < bug.attachments.length - 1 && (
                             <button
                                 onClick={(e) => {
@@ -451,17 +457,17 @@ export default function BugDetail() {
                                 {viewerAttachment.index + 1} / {bug.attachments.length}
                             </div>
                         )}
-                        
+
                         <div className="w-full h-full flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
                             {viewerAttachment.type === 'image' ? (
-                                <motion.img 
+                                <motion.img
                                     key={viewerAttachment.url}
                                     initial={{ opacity: 0, scale: 0.9 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     transition={{ duration: 0.2 }}
-                                    src={viewerAttachment.url} 
-                                    alt="Attachment" 
+                                    src={viewerAttachment.url}
+                                    alt="Attachment"
                                     className="max-w-full max-h-[90vh] object-contain rounded-lg"
                                 />
                             ) : viewerAttachment.type === 'video' ? (
@@ -471,8 +477,8 @@ export default function BugDetail() {
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.9 }}
                                     transition={{ duration: 0.2 }}
-                                    src={viewerAttachment.url} 
-                                    controls 
+                                    src={viewerAttachment.url}
+                                    controls
                                     autoPlay
                                     className="max-w-full max-h-[90vh] rounded-lg"
                                 />
@@ -486,9 +492,9 @@ export default function BugDetail() {
                                 >
                                     <FileText size={64} className="mx-auto mb-4 text-primary" />
                                     <p className="text-lg mb-4">File Preview Not Available</p>
-                                    <a 
-                                        href={viewerAttachment.url} 
-                                        target="_blank" 
+                                    <a
+                                        href={viewerAttachment.url}
+                                        target="_blank"
                                         rel="noopener noreferrer"
                                         className="inline-block px-4 py-2 bg-primary hover:bg-primary/80 rounded-lg transition-colors"
                                     >
