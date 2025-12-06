@@ -39,10 +39,11 @@ export default function EditTestCase() {
     });
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [showSaveModal, setShowSaveModal] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Track changes
+    // Track changes (skip if we're in the middle of saving)
     useEffect(() => {
-        if (!testCase) return;
+        if (!testCase || isSaving) return;
         const hasChanged =
             formData.title !== (testCase.title || '') ||
             formData.description !== (testCase.description || '') ||
@@ -53,14 +54,14 @@ export default function EditTestCase() {
             formData.status !== testCase.status ||
             JSON.stringify(formData.tags) !== JSON.stringify(testCase.tags || []);
         setHasUnsavedChanges(hasChanged);
-    }, [formData, testCase]);
+    }, [formData, testCase, isSaving]);
 
-    const { resetNavigation } = useUnsavedChanges({
+    const { resetNavigation, proceedNavigation, blocker } = useUnsavedChanges({
         hasUnsavedChanges,
         onNavigateAway: () => setShowSaveModal(true),
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (id) {
             // Validate required fields if changing from Draft to another status
@@ -70,24 +71,33 @@ export default function EditTestCase() {
                     return;
                 }
             }
-            updateTestCase(id, formData);
+            setIsSaving(true);
             setHasUnsavedChanges(false);
-            resetNavigation();
+            await updateTestCase(id, formData);
             navigate(`/tests/${id}`);
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (id) {
-            updateTestCase(id, formData);
+            setIsSaving(true);
             setHasUnsavedChanges(false);
+            await updateTestCase(id, formData);
             setShowSaveModal(false);
+            // Proceed to the blocked location
+            if (blocker.state === 'blocked') {
+                proceedNavigation();
+            }
         }
     };
 
     const handleDiscard = () => {
         setHasUnsavedChanges(false);
         setShowSaveModal(false);
+        // Proceed to the blocked location without saving
+        if (blocker.state === 'blocked') {
+            proceedNavigation();
+        }
     };
 
     if (!testCase) {
