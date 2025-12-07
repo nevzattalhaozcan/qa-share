@@ -121,12 +121,14 @@ export default function EditBug() {
         if (id) {
             updateBug(id, formData);
             setHasUnsavedChanges(false);
+            resetNavigation();
             setShowSaveModal(false);
         }
     };
 
     const handleDiscard = () => {
         setHasUnsavedChanges(false);
+        resetNavigation();
         setShowSaveModal(false);
     };
 

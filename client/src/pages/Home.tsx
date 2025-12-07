@@ -232,7 +232,9 @@ export default function Home() {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    setSelectedProjectForMembers(projectId);
+                                                    setSelectedProjectForMembers(
+                                                        selectedProjectForMembers === projectId ? null : projectId
+                                                    );
                                                 }}
                                                 className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white"
                                                 title="View Team Members"

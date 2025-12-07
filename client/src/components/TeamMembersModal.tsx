@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, User as UserIcon, UserPlus, Trash2, Copy, Share2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/Button';
@@ -29,6 +29,11 @@ export default function TeamMembersModal({
     const [role, setRole] = useState<'QA' | 'DEV'>('DEV');
     const [generatedCredentials, setGeneratedCredentials] = useState<{ username: string; password: string; isExisting: boolean } | null>(null);
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+    const [deleteMemberModal, setDeleteMemberModal] = useState<{ show: boolean; memberId: string; memberName: string }>({ 
+        show: false, 
+        memberId: '', 
+        memberName: '' 
+    });
 
     const userId = user ? ((user as any)._id || user.id) : null;
     const isQA = user?.role === 'QA';
@@ -84,6 +89,18 @@ export default function TeamMembersModal({
             copyCredentials();
         }
     };
+
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
 
     return (
         <AnimatePresence>
@@ -254,7 +271,11 @@ export default function TeamMembersModal({
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                removeTeamMember(projectId, memberId);
+                                                                setDeleteMemberModal({
+                                                                    show: true,
+                                                                    memberId,
+                                                                    memberName: member.name
+                                                                });
                                                             }}
                                                             className="p-2 hover:bg-red-500/20 rounded-lg transition-colors text-muted-foreground hover:text-red-400"
                                                             title="Remove member"
@@ -280,6 +301,20 @@ export default function TeamMembersModal({
                 message={errorModal.message}
                 type="error"
                 confirmText="OK"
+            />
+
+            <Modal
+                isOpen={deleteMemberModal.show}
+                onClose={() => setDeleteMemberModal({ show: false, memberId: '', memberName: '' })}
+                title="Remove Team Member"
+                message={`Are you sure you want to remove ${deleteMemberModal.memberName} from this project? This action cannot be undone.`}
+                type="warning"
+                confirmText="Remove"
+                cancelText="Cancel"
+                onConfirm={() => {
+                    removeTeamMember(projectId, deleteMemberModal.memberId);
+                    setDeleteMemberModal({ show: false, memberId: '', memberName: '' });
+                }}
             />
         </AnimatePresence>
     );

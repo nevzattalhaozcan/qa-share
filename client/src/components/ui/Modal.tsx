@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { Button } from './Button';
+import { useEffect } from 'react';
 
 interface ModalProps {
     isOpen: boolean;
@@ -24,6 +25,18 @@ export function Modal({
     confirmText = 'OK',
     cancelText = 'Cancel'
 }: ModalProps) {
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const isConfirm = type === 'confirm' || type === 'warning';

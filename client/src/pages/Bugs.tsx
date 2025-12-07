@@ -1,5 +1,5 @@
 import { useData } from '../context/DataContext';
-import { Plus, Filter, ChevronDown, ChevronRight, ArrowUpDown } from 'lucide-react';
+import { Plus, Filter, ChevronDown, ChevronRight, ArrowUpDown, Database } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import StatusDropdown from '../components/StatusDropdown';
@@ -8,6 +8,7 @@ import { PageLoadingSkeleton } from '../components/ui/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUrlFilters } from '../hooks/useUrlFilters';
 import { useScrollPosition } from '../hooks/useScrollPosition';
+import { Modal } from '../components/ui/Modal';
 
 export default function Bugs() {
     const { bugs, activeProjectId, updateBugStatus, isLoading } = useData();
@@ -16,6 +17,7 @@ export default function Bugs() {
     const [showFilters, setShowFilters] = useState(false);
     const [showClosedBugs, setShowClosedBugs] = useState(false);
     const [showSortMenu, setShowSortMenu] = useState(false);
+    const [testDataModal, setTestDataModal] = useState<{ show: boolean; data: string }>({ show: false, data: '' });
 
     // Persist filters to URL
     const { filters, toggleFilter, updateFilter } = useUrlFilters({
@@ -94,7 +96,7 @@ export default function Bugs() {
     const renderBugCard = (bug: typeof bugs[0]) => {
         const bugId = (bug as any)._id || bug.id;
         return (
-            <div key={bugId} className="glass-card p-4 rounded-xl space-y-2 hover:bg-white/5 transition-colors relative hover:z-50">
+            <div key={bugId} className="glass-card p-4 rounded-xl space-y-2 hover:bg-white/5 transition-colors relative">
                 <Link to={`/bugs/${bugId}`} state={{ from: location }} className="block">
                     <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -125,13 +127,28 @@ export default function Bugs() {
                 </Link>
 
                 <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-2">
-                    <StatusDropdown
-                        currentStatus={bug.status}
-                        options={['Draft', 'Opened', 'Fixed', 'Closed']}
-                        onUpdate={(status) => updateBugStatus(bugId, status as any)}
-                        colorMap={statusColors}
-                        disabled={!canEditBugStatus}
-                    />
+                    <div className="flex items-center gap-2">
+                        <StatusDropdown
+                            currentStatus={bug.status}
+                            options={['Draft', 'Opened', 'Fixed', 'Closed']}
+                            onUpdate={(status) => updateBugStatus(bugId, status as any)}
+                            colorMap={statusColors}
+                            disabled={!canEditBugStatus}
+                        />
+                        {bug.testData && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setTestDataModal({ show: true, data: bug.testData || '' });
+                                }}
+                                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 transition-colors"
+                                title="View test data"
+                            >
+                                <Database size={14} />
+                                Test Data
+                            </button>
+                        )}
+                    </div>
                     <span className="text-xs text-muted-foreground">{new Date(bug.createdAt).toLocaleDateString()}</span>
                 </div>
             </div>
@@ -319,6 +336,15 @@ export default function Bugs() {
                     </AnimatePresence>
                 </div>
             )}
+
+            <Modal
+                isOpen={testDataModal.show}
+                onClose={() => setTestDataModal({ show: false, data: '' })}
+                title="Test Data"
+                message={testDataModal.data}
+                type="info"
+                confirmText="Close"
+            />
         </div>
     );
 }
