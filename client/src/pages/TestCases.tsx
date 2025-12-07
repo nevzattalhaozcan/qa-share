@@ -30,6 +30,7 @@ export default function TestCases() {
     const { filters, toggleFilter, updateFilter } = useUrlFilters({
         status: [] as string[],
         priority: [] as string[],
+        tags: [] as string[],
         search: '',
         sort: 'newest' // Default sort
     });
@@ -130,6 +131,12 @@ export default function TestCases() {
         }
         if (filters.priority.length > 0 && !filters.priority.includes(test.priority)) {
             return false;
+        }
+        if (filters.tags.length > 0) {
+            const testTags = test.tags || [];
+            if (!filters.tags.some(tag => testTags.includes(tag))) {
+                return false;
+            }
         }
 
         // Unified Search Logic

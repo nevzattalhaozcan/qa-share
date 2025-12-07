@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Bug, User, Lock, Eye, EyeOff } from 'lucide-react';
+import { Bug, User, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -15,12 +15,15 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleLogin = async () => {
         setError('');
+        setIsLoading(true);
 
         if (!username || !password) {
             setError('Please enter both username and password');
+            setIsLoading(false);
             return;
         }
 
@@ -31,11 +34,12 @@ export default function Login() {
             navigate('/');
         } else {
             setError('Invalid username or password');
+            setIsLoading(false);
         }
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !isLoading) {
             handleLogin();
         }
     };
@@ -72,6 +76,7 @@ export default function Login() {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 onKeyPress={handleKeyPress}
+                                disabled={isLoading}
                                 autoFocus
                             />
                         </div>
@@ -88,12 +93,14 @@ export default function Login() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     onKeyPress={handleKeyPress}
+                                    disabled={isLoading}
                                     className="pr-10"
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                                    disabled={isLoading}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </button>
@@ -112,10 +119,17 @@ export default function Login() {
 
                         <Button
                             className="w-full h-12"
-                            disabled={!username || !password}
+                            disabled={!username || !password || isLoading}
                             onClick={handleLogin}
                         >
-                            Sign In
+                            {isLoading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <Loader2 className="w-5 h-5 animate-spin" />
+                                    Signing in...
+                                </span>
+                            ) : (
+                                'Sign In'
+                            )}
                         </Button>
                     </div>
 
