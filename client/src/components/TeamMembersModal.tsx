@@ -27,7 +27,7 @@ export default function TeamMembersModal({
     const [username, setUsername] = useState('');
     const [name, setName] = useState('');
     const [role, setRole] = useState<'QA' | 'DEV'>('DEV');
-    const [generatedCredentials, setGeneratedCredentials] = useState<{ username: string; password: string } | null>(null);
+    const [generatedCredentials, setGeneratedCredentials] = useState<{ username: string; password: string; isExisting: boolean } | null>(null);
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
 
     const userId = user ? ((user as any)._id || user.id) : null;
@@ -46,15 +46,19 @@ export default function TeamMembersModal({
             role,
         };
 
-        const error = await addTeamMember(projectId, newMember);
+        const result = await addTeamMember(projectId, newMember);
 
-        if (error) {
-            setErrorModal({ show: true, message: error });
+        if (result.error) {
+            setErrorModal({ show: true, message: result.error });
             return;
         }
 
         // Show credentials to QA
-        setGeneratedCredentials({ username: username.trim(), password });
+        setGeneratedCredentials({ 
+            username: username.trim(), 
+            password,
+            isExisting: result.isExistingUser || false
+        });
 
         setUsername('');
         setName('');
@@ -63,13 +67,17 @@ export default function TeamMembersModal({
 
     const copyCredentials = () => {
         if (!generatedCredentials) return;
-        const text = `Username: ${generatedCredentials.username}\nPassword: ${generatedCredentials.password}`;
+        const text = generatedCredentials.isExisting 
+            ? `Username: ${generatedCredentials.username}`
+            : `Username: ${generatedCredentials.username}\nPassword: ${generatedCredentials.password}`;
         navigator.clipboard.writeText(text);
     };
 
     const shareCredentials = () => {
         if (!generatedCredentials) return;
-        const text = `Username: ${generatedCredentials.username}\nPassword: ${generatedCredentials.password}`;
+        const text = generatedCredentials.isExisting 
+            ? `Username: ${generatedCredentials.username}`
+            : `Username: ${generatedCredentials.username}\nPassword: ${generatedCredentials.password}`;
         if (navigator.share) {
             navigator.share({ text });
         } else {
@@ -120,24 +128,43 @@ export default function TeamMembersModal({
                                     className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 space-y-3"
                                 >
                                     <p className="text-sm font-medium text-green-400">✓ Member Added Successfully!</p>
-                                    <div className="space-y-2 bg-black/20 p-3 rounded-lg font-mono text-sm">
-                                        <div>
-                                            <span className="text-muted-foreground">Username:</span>
-                                            <span className="ml-2 text-primary">{generatedCredentials.username}</span>
+                                    
+                                    {generatedCredentials.isExisting ? (
+                                        <div className="space-y-2">
+                                            <div className="bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg">
+                                                <p className="text-xs text-blue-400 mb-2">ℹ️ User already exists - password not changed</p>
+                                                <div className="font-mono text-sm">
+                                                    <span className="text-muted-foreground">Username:</span>
+                                                    <span className="ml-2 text-primary">{generatedCredentials.username}</span>
+                                                </div>
+                                            </div>
+                                            <Button size="sm" onClick={copyCredentials} className="w-full">
+                                                <Copy size={14} className="mr-1" /> Copy Username
+                                            </Button>
                                         </div>
-                                        <div>
-                                            <span className="text-muted-foreground">Password:</span>
-                                            <span className="ml-2 text-primary">{generatedCredentials.password}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button size="sm" onClick={copyCredentials} className="flex-1">
-                                            <Copy size={14} className="mr-1" /> Copy
-                                        </Button>
-                                        <Button size="sm" onClick={shareCredentials} className="flex-1">
-                                            <Share2 size={14} className="mr-1" /> Share
-                                        </Button>
-                                    </div>
+                                    ) : (
+                                        <>
+                                            <div className="space-y-2 bg-black/20 p-3 rounded-lg font-mono text-sm">
+                                                <div>
+                                                    <span className="text-muted-foreground">Username:</span>
+                                                    <span className="ml-2 text-primary">{generatedCredentials.username}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-muted-foreground">Password:</span>
+                                                    <span className="ml-2 text-primary">{generatedCredentials.password}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button size="sm" onClick={copyCredentials} className="flex-1">
+                                                    <Copy size={14} className="mr-1" /> Copy
+                                                </Button>
+                                                <Button size="sm" onClick={shareCredentials} className="flex-1">
+                                                    <Share2 size={14} className="mr-1" /> Share
+                                                </Button>
+                                            </div>
+                                        </>
+                                    )}
+                                    
                                     <button
                                         onClick={() => setGeneratedCredentials(null)}
                                         className="text-xs text-muted-foreground hover:text-foreground transition-colors w-full text-center"

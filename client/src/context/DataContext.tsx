@@ -112,7 +112,7 @@ interface DataContextType {
     addProject: (project: Omit<Project, 'id' | 'createdAt'>) => void;
     deleteProject: (projectId: string) => void;
     updateProjectPermissions: (projectId: string, permissions: ProjectPermissions) => void;
-    addTeamMember: (projectId: string, member: TeamMember) => Promise<string | null>;
+    addTeamMember: (projectId: string, member: TeamMember) => Promise<{ error: string | null; isExistingUser?: boolean }>;
     removeTeamMember: (projectId: string, memberId: string) => void;
     addTestCase: (testCase: Omit<TestCase, 'id' | 'createdAt' | 'createdBy'>) => Promise<TestCase | null>;
     updateTestCase: (id: string, updates: Partial<Omit<TestCase, 'id' | 'createdAt' | 'createdBy'>>) => void;
@@ -250,15 +250,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
-    const addTeamMember = async (projectId: string, member: TeamMember): Promise<string | null> => {
+    const addTeamMember = async (projectId: string, member: TeamMember): Promise<{ error: string | null; isExistingUser?: boolean }> => {
         try {
             const res = await api.post(`/projects/${projectId}/members`, member);
-            setProjects(projects.map(p => (p.id === projectId || (p as any)._id === projectId) ? res.data : p));
-            return null;
+            const { project, isExistingUser } = res.data;
+            setProjects(projects.map(p => (p.id === projectId || (p as any)._id === projectId) ? project : p));
+            return { error: null, isExistingUser };
         } catch (err) {
             console.error(err);
             const errorMessage = (err as any).response?.data?.msg || (err as any).message || 'Failed to add member';
-            return errorMessage;
+            return { error: errorMessage };
         }
     };
 

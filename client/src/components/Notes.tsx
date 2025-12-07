@@ -3,7 +3,7 @@ import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff, Eye, X, Pencil, Save } from 'lucide-react';
+import { Copy, Share2, Trash2, Plus, Check, Key, Pin, EyeOff, Eye, X, Pencil, Save, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Helper function to convert URLs to clickable links
@@ -39,6 +39,7 @@ export default function Notes() {
     const [copiedId, setCopiedId] = useState<string | null>(null);
     const [selectedNote, setSelectedNote] = useState<typeof notes[0] | null>(null);
     const [isEditing, setIsEditing] = useState(false);
+    const [showAll, setShowAll] = useState(false);
 
     // New state to track how the modal was opened (View vs Edit)
     const [openedInEditMode, setOpenedInEditMode] = useState(false);
@@ -72,7 +73,11 @@ export default function Notes() {
             if (!a.pinned && b.pinned) return 1;
             // Then sort by creation date (newest first)
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            // Then sort by creation date (newest first)
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         });
+
+    const visibleNotes = showAll ? sortedNotes : sortedNotes.slice(0, 3);
 
     const handleAddNote = (e: React.FormEvent) => {
         e.preventDefault();
@@ -197,7 +202,7 @@ export default function Notes() {
 
             <div className="space-y-3">
                 <AnimatePresence mode="popLayout">
-                    {sortedNotes.map((note) => {
+                    {visibleNotes.map((note) => {
                         const noteId = (note as any)._id || note.id;
                         const textToCopy = note.type === 'kv' ? `${note.label}: ${note.content}` : note.content;
 
@@ -309,6 +314,24 @@ export default function Notes() {
                     <div className="text-center py-8 text-muted-foreground text-sm">
                         No notes yet. Add one above!
                     </div>
+                )}
+
+                {sortedNotes.length > 3 && (
+                    <Button
+                        variant="ghost"
+                        onClick={() => setShowAll(!showAll)}
+                        className="w-full text-xs text-muted-foreground hover:text-white"
+                    >
+                        {showAll ? (
+                            <span className="flex items-center gap-1">
+                                Show Less <ChevronUp size={14} />
+                            </span>
+                        ) : (
+                            <span className="flex items-center gap-1">
+                                Show More ({sortedNotes.length - 3} more) <ChevronDown size={14} />
+                            </span>
+                        )}
+                    </Button>
                 )}
             </div>
 

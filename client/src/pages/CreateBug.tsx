@@ -6,7 +6,7 @@ import { Input } from '../components/ui/Input';
 import { Textarea } from '../components/ui/Textarea';
 import { Modal } from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
-import { Image, X, Link as LinkIcon } from 'lucide-react';
+import { Image, X, Link as LinkIcon, ArrowLeft } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { useListAutoFormat } from '../hooks/useListAutoFormat';
 import { useUnsavedChanges } from '../hooks/useUnsavedChanges';
@@ -171,7 +171,12 @@ export default function CreateBug() {
 
     return (
         <div className="space-y-6 pb-20">
-            <h1 className="text-2xl font-bold">Report Bug</h1>
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => navigate('/bugs')}>
+                    <ArrowLeft size={24} />
+                </Button>
+                <h1 className="text-2xl font-bold">Report Bug</h1>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">

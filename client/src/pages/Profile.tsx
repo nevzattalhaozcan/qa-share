@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import Notes from '../components/Notes';
 import { usePermissions } from '../hooks/usePermissions';
-import { Lock, User, Edit2, Check, X } from 'lucide-react';
+import { Lock, User, Edit2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 export default function Profile() {
     const navigate = useNavigate();
@@ -22,6 +22,9 @@ export default function Profile() {
     const [editName, setEditName] = useState(user?.name || '');
     const [editUsername, setEditUsername] = useState(user?.username || '');
     const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+
+    // Password collapse state
+    const [isPasswordExpanded, setIsPasswordExpanded] = useState(false);
 
     const handlePasswordChange = async () => {
         setPasswordMessage(null);
@@ -167,45 +170,54 @@ export default function Profile() {
 
             {/* Password change section */}
             <div className="glass-card p-4 rounded-xl space-y-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                    <Lock size={18} />
-                    Change Password
-                </h3>
+                <button
+                    onClick={() => setIsPasswordExpanded(!isPasswordExpanded)}
+                    className="flex items-center justify-between w-full font-semibold"
+                >
+                    <div className="flex items-center gap-2">
+                        <Lock size={18} />
+                        Change Password
+                    </div>
+                    {isPasswordExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </button>
 
-                <div className="space-y-3">
-                    <Input
-                        type="password"
-                        placeholder="Current Password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                    />
-                    <Input
-                        type="password"
-                        placeholder="New Password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                    <Input
-                        type="password"
-                        placeholder="Confirm New Password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                    />
+                {/* Password input fields */}
+                {isPasswordExpanded && (
+                    <div className="space-y-3 pt-2">
+                        <Input
+                            type="password"
+                            placeholder="Current Password"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                        />
+                        <Input
+                            type="password"
+                            placeholder="New Password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                        />
+                        <Input
+                            type="password"
+                            placeholder="Confirm New Password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                        />
 
-                    {passwordMessage && (
-                        <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                            {passwordMessage.text}
-                        </p>
-                    )}
+                        {passwordMessage && (
+                            <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                                {passwordMessage.text}
+                            </p>
+                        )}
 
-                    <Button
-                        onClick={handlePasswordChange}
-                        className="w-full"
-                        disabled={!currentPassword || !newPassword || !confirmPassword}
-                    >
-                        Update Password
-                    </Button>
-                </div>
+                        <Button
+                            onClick={handlePasswordChange}
+                            className="w-full"
+                            disabled={!currentPassword || !newPassword || !confirmPassword}
+                        >
+                            Update Password
+                        </Button>
+                    </div>
+                )}
             </div>
 
             <div className="glass-card p-4 rounded-xl space-y-4">

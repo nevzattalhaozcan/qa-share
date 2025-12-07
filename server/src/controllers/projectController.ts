@@ -88,18 +88,28 @@ export const addTeamMember = async (req: Request, res: Response) => {
         const { id } = req.params;
         const member = req.body;
 
-        // Check if user exists in User collection, if not create one
+        // Check if user exists in User collection
         let user = await User.findOne({ username: member.username });
+        let isExistingUser = false;
+
         if (!user) {
+            // Create new user
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(member.password, salt);
-
+            
             user = new User({
                 name: member.name,
                 username: member.username,
                 password: hashedPassword,
                 role: member.role
             });
+            await user.save();
+        } else {
+            // User already exists - don't update password
+            isExistingUser = true;
+            // Only update name and role if needed
+            user.name = member.name;
+            user.role = member.role;
             await user.save();
         }
 
@@ -126,7 +136,9 @@ export const addTeamMember = async (req: Request, res: Response) => {
             role: member.role
         });
         await project.save();
-        res.json(project);
+        
+        // Return project with isExistingUser flag
+        res.json({ project, isExistingUser });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

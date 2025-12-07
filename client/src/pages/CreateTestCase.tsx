@@ -13,7 +13,7 @@ import LinkSelector from '../components/LinkSelector';
 import StatusDropdown from '../components/StatusDropdown';
 import TagInput from '../components/TagInput';
 import { AnimatePresence } from 'framer-motion';
-import { Link as LinkIcon } from 'lucide-react';
+import { Link as LinkIcon, ArrowLeft } from 'lucide-react';
 
 export default function CreateTestCase() {
     const navigate = useNavigate();
@@ -52,8 +52,8 @@ export default function CreateTestCase() {
 
     // Track if any field has been filled
     useEffect(() => {
-        const hasContent = !!(formData.title || formData.description || formData.preconditions || 
-                          formData.steps || formData.expectedResult || formData.tags.length > 0);
+        const hasContent = !!(formData.title || formData.description || formData.preconditions ||
+            formData.steps || formData.expectedResult || formData.tags.length > 0);
         setHasUnsavedChanges(hasContent);
     }, [formData]);
 
@@ -113,7 +113,12 @@ export default function CreateTestCase() {
 
     return (
         <div className="space-y-6 pb-20">
-            <h1 className="text-2xl font-bold">Create Test Case</h1>
+            <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={() => navigate('/tests')}>
+                    <ArrowLeft size={24} />
+                </Button>
+                <h1 className="text-2xl font-bold">Create Test Case</h1>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
