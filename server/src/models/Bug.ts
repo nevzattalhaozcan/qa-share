@@ -4,12 +4,13 @@ const bugSchema = new mongoose.Schema({
     projectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Project', required: true },
     title: { type: String, required: true },
     description: { type: String },
-    stepsToReproduce: { 
-        type: String, 
-        required: function(this: any) {
+    stepsToReproduce: {
+        type: String,
+        required: function (this: any) {
             return this.status !== 'Draft';
         }
     },
+    testData: { type: String },
     expectedResult: { type: String },
     actualResult: { type: String },
     severity: { type: String, enum: ['Low', 'Medium', 'High', 'Critical'], default: 'Medium' },

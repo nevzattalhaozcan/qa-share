@@ -32,6 +32,7 @@ export default function EditBug() {
         title: bug?.title || '',
         description: bug?.description || '',
         stepsToReproduce: bug?.stepsToReproduce || '',
+        testData: bug?.testData || '',
         expectedResult: bug?.expectedResult || '',
         actualResult: bug?.actualResult || '',
         severity: (bug?.severity || 'Medium') as Bug['severity'],
@@ -46,10 +47,11 @@ export default function EditBug() {
     // Track changes
     useEffect(() => {
         if (!bug) return;
-        const hasChanged = 
+        const hasChanged =
             formData.title !== (bug.title || '') ||
             formData.description !== (bug.description || '') ||
             formData.stepsToReproduce !== (bug.stepsToReproduce || '') ||
+            formData.testData !== (bug.testData || '') ||
             formData.expectedResult !== (bug.expectedResult || '') ||
             formData.actualResult !== (bug.actualResult || '') ||
             formData.severity !== bug.severity ||
@@ -66,7 +68,7 @@ export default function EditBug() {
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
-            
+
             setIsUploading(true);
             try {
                 const result = await uploadFile(file);
@@ -189,6 +191,16 @@ export default function EditBug() {
                 </div>
 
                 <div className="space-y-2">
+                    <label className="text-sm font-medium">Test Data</label>
+                    <Textarea
+                        value={formData.testData}
+                        onChange={e => setFormData({ ...formData, testData: e.target.value })}
+                        placeholder="Credentials, URLs, or data needed to reproduce"
+                        className="font-mono text-sm"
+                    />
+                </div>
+
+                <div className="space-y-2">
                     <label className="text-sm font-medium">Expected Result</label>
                     <Textarea
                         value={formData.expectedResult}
@@ -244,10 +256,10 @@ export default function EditBug() {
                                     </>
                                 )}
                             </div>
-                            <input 
-                                type="file" 
-                                accept="image/*,video/*" 
-                                className="hidden" 
+                            <input
+                                type="file"
+                                accept="image/*,video/*"
+                                className="hidden"
                                 onChange={handleImageUpload}
                                 disabled={isUploading}
                             />

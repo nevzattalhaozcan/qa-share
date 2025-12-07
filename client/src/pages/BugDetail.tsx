@@ -158,8 +158,8 @@ export default function BugDetail() {
                 {/* Bottom Row - Severity and Status */}
                 <div className="flex items-center justify-between">
                     <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${bug.severity === 'Critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                            bug.severity === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
-                                'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        bug.severity === 'High' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' :
+                            'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                         }`}>
                         {bug.severity} Severity
                     </span>
@@ -205,6 +205,16 @@ export default function BugDetail() {
                         />
                     </div>
                 </div>
+
+                {bug.testData && (
+                    <div className="space-y-3">
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Test Data</h3>
+                        <div className="bg-slate-900/50 p-5 rounded-xl border border-white/10">
+                            <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed">{bug.testData}</pre>
+                        </div>
+                    </div>
+                )}
+
 
                 <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-3">

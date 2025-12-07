@@ -260,7 +260,7 @@ export default function Bugs() {
                     <div>
                         <h3 className="text-sm font-semibold mb-2">Tags</h3>
                         <div className="flex flex-wrap gap-2">
-                            {['ui', 'backend', 'db', 'mobile', 'web'].map(tag => (
+                            {['mobile', 'backend', 'web', 'dev', 'prod'].map(tag => (
                                 <button
                                     key={tag}
                                     onClick={() => toggleFilter('tags', tag)}

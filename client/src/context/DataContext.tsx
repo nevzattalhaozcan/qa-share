@@ -53,6 +53,7 @@ export interface Bug {
     title: string;
     description: string;
     stepsToReproduce: string;
+    testData?: string;
     expectedResult?: string;
     actualResult?: string;
     severity: 'Low' | 'Medium' | 'High' | 'Critical';

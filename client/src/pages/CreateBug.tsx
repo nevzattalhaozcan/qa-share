@@ -39,6 +39,7 @@ export default function CreateBug() {
         title: '',
         description: '',
         stepsToReproduce: '',
+        testData: '',
         expectedResult: '',
         actualResult: '',
         severity: 'Medium' as Bug['severity'],
@@ -56,10 +57,9 @@ export default function CreateBug() {
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
 
-    // Track if any field has been filled
     useEffect(() => {
         const hasContent = !!(formData.title || formData.description || formData.stepsToReproduce ||
-            formData.expectedResult || formData.actualResult ||
+            formData.testData || formData.expectedResult || formData.actualResult ||
             formData.tags.length > 0 || formData.attachments.length > 0);
         setHasUnsavedChanges(hasContent);
     }, [formData]);
@@ -217,6 +217,16 @@ export default function CreateBug() {
                         onChange={e => setFormData({ ...formData, stepsToReproduce: e.target.value })}
                         onKeyDown={e => handleKeyDown(e, formData.stepsToReproduce, (v) => setFormData({ ...formData, stepsToReproduce: v }))}
                         placeholder="1. Open app&#10;2. Click button&#10;3. Observe crash"
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Test Data</label>
+                    <Textarea
+                        value={formData.testData}
+                        onChange={e => setFormData({ ...formData, testData: e.target.value })}
+                        placeholder="Credentials, URLs, or data needed to reproduce"
+                        className="font-mono text-sm"
                     />
                 </div>
 
