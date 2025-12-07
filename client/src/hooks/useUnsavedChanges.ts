@@ -50,11 +50,16 @@ export function useUnsavedChanges({ hasUnsavedChanges, onNavigateAway }: UseUnsa
         enableBlockerRef.current = true;
     }, [blocker]);
 
+    const disableBlocker = useCallback(() => {
+        enableBlockerRef.current = false;
+    }, []);
+
     return {
         isBlocked: blocker.state === 'blocked',
         blockedPath: blocker.state === 'blocked' ? blocker.location.pathname : null,
         blocker,
         proceedNavigation,
         resetNavigation,
+        disableBlocker,
     };
 }

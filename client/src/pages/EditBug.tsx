@@ -60,7 +60,7 @@ export default function EditBug() {
         setHasUnsavedChanges(hasChanged);
     }, [formData, bug]);
 
-    const { resetNavigation, proceedNavigation, blocker } = useUnsavedChanges({
+    const { resetNavigation, proceedNavigation, blocker, disableBlocker } = useUnsavedChanges({
         hasUnsavedChanges,
         onNavigateAway: () => setShowSaveModal(true),
     });
@@ -112,7 +112,7 @@ export default function EditBug() {
             }
             updateBug(id, formData);
             setHasUnsavedChanges(false);
-            resetNavigation();
+            disableBlocker();
             navigate(`/bugs/${id}`);
         }
     };
@@ -126,7 +126,7 @@ export default function EditBug() {
                 proceedNavigation();
             } else {
                 // If user clicked save button directly, go to detail page
-                resetNavigation();
+                disableBlocker();
                 navigate(`/bugs/${id}`);
             }
         }
