@@ -416,3 +416,28 @@ export const bulkMoveTestCases = async (req: Request, res: Response) => {
         res.status(500).send('Server Error');
     }
 };
+
+// Bulk delete test cases
+export const bulkDeleteTestCases = async (req: Request, res: Response) => {
+    try {
+        const { testCaseIds } = req.body;
+
+        if (!testCaseIds || !Array.isArray(testCaseIds) || testCaseIds.length === 0) {
+            return res.status(400).json({ msg: 'Test case IDs are required' });
+        }
+
+        // Delete test cases
+        await TestCase.deleteMany({ _id: { $in: testCaseIds } });
+
+        // Remove references from bugs
+        await Bug.updateMany(
+            { linkedTestCaseIds: { $in: testCaseIds } },
+            { $pull: { linkedTestCaseIds: { $in: testCaseIds } } }
+        );
+
+        res.json({ msg: 'Test Cases deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};

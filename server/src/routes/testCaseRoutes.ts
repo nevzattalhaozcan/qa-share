@@ -8,7 +8,8 @@ import {
     moveTestCase,
     bulkDuplicateTestCases,
     bulkMoveTestCases,
-    createTestCasesBulk
+    createTestCasesBulk,
+    bulkDeleteTestCases
 } from '../controllers/testCaseController';
 import { auth } from '../middleware/auth';
 
@@ -21,6 +22,7 @@ router.post('/', auth, createTestCase);
 router.post('/bulk', auth, createTestCasesBulk);
 router.post('/bulk/duplicate', auth, bulkDuplicateTestCases);
 router.patch('/bulk/move', auth, bulkMoveTestCases);
+router.delete('/bulk', auth, bulkDeleteTestCases);
 
 // Single operations with :id
 router.put('/:id', auth, updateTestCase);

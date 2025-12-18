@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Copy, ArrowRight, CopyPlus, Loader2, ChevronDown, FolderOpen } from 'lucide-react';
+import { X, Copy, ArrowRight, CopyPlus, Loader2, ChevronDown, FolderOpen, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/Button';
 import { useData } from '../context/DataContext';
@@ -7,10 +7,11 @@ import {
     duplicateTestCase as duplicateTestCaseApi,
     moveTestCase as moveTestCaseApi,
     bulkDuplicateTestCases,
-    bulkMoveTestCases
+    bulkMoveTestCases,
+    bulkDeleteTestCases as bulkDeleteTestCasesApi
 } from '../lib/api';
 
-type ActionType = 'duplicate' | 'move' | 'duplicate-move';
+type ActionType = 'duplicate' | 'move' | 'duplicate-move' | 'delete';
 
 interface TestCaseActionModalProps {
     isOpen: boolean;
@@ -45,6 +46,7 @@ export default function TestCaseActionModal({
 
     const isSingle = selectedTestCaseIds.length === 1;
     const needsTargetProject = action === 'move' || action === 'duplicate-move';
+    const isDestructive = action === 'delete';
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -98,6 +100,8 @@ export default function TestCaseActionModal({
                     await moveTestCaseApi(id, targetProjectId);
                 } else if (action === 'duplicate-move') {
                     await duplicateTestCaseApi(id, targetProjectId);
+                } else if (action === 'delete') {
+                    await bulkDeleteTestCasesApi([id]);
                 }
             } else {
                 if (action === 'duplicate') {
@@ -106,6 +110,8 @@ export default function TestCaseActionModal({
                     await bulkMoveTestCases(selectedTestCaseIds, targetProjectId);
                 } else if (action === 'duplicate-move') {
                     await bulkDuplicateTestCases(selectedTestCaseIds, targetProjectId);
+                } else if (action === 'delete') {
+                    await bulkDeleteTestCasesApi(selectedTestCaseIds);
                 }
             }
 
@@ -139,6 +145,12 @@ export default function TestCaseActionModal({
             label: 'Duplicate & Move',
             description: 'Create a copy in another project'
         },
+        {
+            type: 'delete' as ActionType,
+            icon: Trash2,
+            label: 'Delete',
+            description: 'Permanently remove selected test cases'
+        }
     ];
 
     return (
@@ -197,8 +209,8 @@ export default function TestCaseActionModal({
                                             }}
                                             disabled={isLoading}
                                             className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${action === type
-                                                    ? 'border-primary bg-primary/10 text-primary'
-                                                    : 'border-white/10 hover:bg-white/5'
+                                                ? 'border-primary bg-primary/10 text-primary'
+                                                : 'border-white/10 hover:bg-white/5'
                                                 }`}
                                         >
                                             <div className={`p-2 rounded-lg ${action === type ? 'bg-primary/20' : 'bg-white/5'
@@ -232,8 +244,8 @@ export default function TestCaseActionModal({
                                                 onClick={() => setShowProjectDropdown(!showProjectDropdown)}
                                                 disabled={isLoading}
                                                 className={`flex items-center justify-between w-full h-12 px-4 rounded-xl border transition-all ${showProjectDropdown
-                                                        ? 'border-primary bg-primary/5'
-                                                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                                                    ? 'border-primary bg-primary/5'
+                                                    : 'border-white/10 bg-white/5 hover:border-white/20'
                                                     } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                             >
                                                 <div className="flex items-center gap-3">
@@ -272,8 +284,8 @@ export default function TestCaseActionModal({
                                                                             setError(null);
                                                                         }}
                                                                         className={`w-full text-left px-4 py-3 text-sm transition-all flex items-center justify-between ${isSelected
-                                                                                ? 'bg-primary/20 text-primary font-semibold'
-                                                                                : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                                                                            ? 'bg-primary/20 text-primary font-semibold'
+                                                                            : 'text-gray-300 hover:bg-white/10 hover:text-white'
                                                                             }`}
                                                                     >
                                                                         <div className="flex items-center gap-3">
@@ -315,6 +327,7 @@ export default function TestCaseActionModal({
                                 <Button
                                     className="flex-1"
                                     onClick={handleSubmit}
+                                    variant={isDestructive ? 'destructive' : 'default'}
                                     disabled={isLoading || (needsTargetProject && otherProjects.length === 0)}
                                 >
                                     {isLoading ? (
@@ -327,6 +340,7 @@ export default function TestCaseActionModal({
                                             {action === 'duplicate' && 'Duplicate'}
                                             {action === 'move' && 'Move'}
                                             {action === 'duplicate-move' && 'Duplicate & Move'}
+                                            {action === 'delete' && 'Delete'}
                                         </>
                                     )}
                                 </Button>

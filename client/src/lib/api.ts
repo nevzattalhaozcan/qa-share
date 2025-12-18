@@ -87,3 +87,9 @@ export const bulkMoveTestCases = async (testCaseIds: string[], targetProjectId: 
     const response = await api.patch('/tests/bulk/move', { testCaseIds, targetProjectId });
     return response.data;
 };
+
+// Bulk delete test cases
+export const bulkDeleteTestCases = async (testCaseIds: string[]) => {
+    const response = await api.delete('/tests/bulk', { data: { testCaseIds } });
+    return response.data;
+};
