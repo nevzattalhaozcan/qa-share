@@ -7,7 +7,7 @@ import { seedDatabase } from './config/seedDatabase';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 10000;
 
 // CORS configuration
 const corsOptions = {
@@ -82,7 +82,8 @@ mongoose.connect(MONGODB_URI)
         // Seed database with default users
         await seedDatabase();
 
-        app.listen(PORT, () => {
+        // Bind to 0.0.0.0 to ensure external access (required for Render)
+        app.listen(Number(PORT), '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);
 
             // Keep-alive: Self-ping every 14 minutes to prevent Render from spinning down
