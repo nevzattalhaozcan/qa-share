@@ -57,7 +57,7 @@ export default function NotificationBell() {
                             initial={{ opacity: 0, y: -10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            className="absolute right-0 top-full mt-2 w-80 glass-card rounded-xl shadow-xl z-50 max-h-96 overflow-hidden flex flex-col"
+                            className="absolute right-0 top-full mt-2 w-80 glass-card bg-slate-900/95 rounded-xl shadow-xl z-50 max-h-96 overflow-hidden flex flex-col"
                         >
                             {/* Header */}
                             <div className="p-4 border-b border-white/10 flex items-center justify-between">

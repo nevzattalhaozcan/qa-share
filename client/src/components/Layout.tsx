@@ -83,7 +83,7 @@ export default function Layout() {
                                         navigate('/tests/create');
                                         setShowCreateMenu(false);
                                     }}
-                                    className="glass-card p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
+                                    className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
                                 >
                                     <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
                                         <FileText size={20} />
@@ -96,7 +96,7 @@ export default function Layout() {
                                         navigate('/bugs/create');
                                         setShowCreateMenu(false);
                                     }}
-                                    className="glass-card p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
+                                    className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
                                 >
                                     <div className="p-2 rounded-lg bg-red-500/20 text-red-400">
                                         <Bug size={20} />
