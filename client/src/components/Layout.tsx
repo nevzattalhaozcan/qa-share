@@ -193,7 +193,7 @@ export default function Layout() {
             </AnimatePresence>
 
             {/* Main Content */}
-            <main className="pt-20 px-4 max-w-md mx-auto">
+            <main className="pt-24 px-4 max-w-md mx-auto">
                 <Outlet />
             </main>
 
