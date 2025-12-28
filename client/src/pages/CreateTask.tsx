@@ -122,42 +122,38 @@ export default function CreateTask() {
                     {/* Status */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground">Status</label>
-                        <div className="flex bg-white/5 p-1 rounded-xl">
-                            {(['To Do', 'In Progress', 'Done'] as const).map((s) => (
-                                <button
-                                    key={s}
-                                    type="button"
-                                    onClick={() => setStatus(s)}
-                                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${status === s
-                                        ? 'bg-primary text-white shadow-lg'
-                                        : 'text-muted-foreground hover:text-white'
-                                        }`}
-                                >
-                                    {s}
-                                </button>
-                            ))}
+                        <div className="relative">
+                            <select
+                                value={status}
+                                onChange={(e) => setStatus(e.target.value as any)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium cursor-pointer hover:bg-white/10"
+                            >
+                                <option value="To Do" className="bg-slate-900 text-slate-300">To Do</option>
+                                <option value="In Progress" className="bg-slate-900 text-blue-400">In Progress</option>
+                                <option value="Done" className="bg-slate-900 text-green-400">Done</option>
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
                         </div>
                     </div>
 
                     {/* Priority */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-muted-foreground">Priority</label>
-                        <div className="flex bg-white/5 p-1 rounded-xl">
-                            {(['Low', 'Medium', 'High'] as const).map((p) => (
-                                <button
-                                    key={p}
-                                    type="button"
-                                    onClick={() => setPriority(p)}
-                                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${priority === p
-                                            ? (p === 'High' ? 'bg-orange-500 text-white shadow-lg' :
-                                                p === 'Medium' ? 'bg-blue-500 text-white shadow-lg' :
-                                                    'bg-slate-500 text-white shadow-lg')
-                                            : 'text-muted-foreground hover:text-white'
-                                        }`}
-                                >
-                                    {p}
-                                </button>
-                            ))}
+                        <div className="relative">
+                            <select
+                                value={priority}
+                                onChange={(e) => setPriority(e.target.value as any)}
+                                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all font-medium cursor-pointer hover:bg-white/10"
+                            >
+                                <option value="Low" className="bg-slate-900 text-slate-300">Low</option>
+                                <option value="Medium" className="bg-slate-900 text-blue-400">Medium</option>
+                                <option value="High" className="bg-slate-900 text-orange-400">High</option>
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -19,6 +19,7 @@ import EditTestCase from "./pages/EditTestCase";
 import EditBug from "./pages/EditBug";
 import Tasks from "./pages/Tasks";
 import CreateTask from "./pages/CreateTask";
+import TaskDetail from "./pages/TaskDetail";
 
 // Protected Route Component
 const ProtectedRoute = () => {
@@ -99,6 +100,10 @@ const router = createHashRouter([
       {
         path: "/tasks/create",
         element: <CreateTask />,
+      },
+      {
+        path: "/tasks/:id",
+        element: <TaskDetail />,
       },
       {
         path: "/profile",

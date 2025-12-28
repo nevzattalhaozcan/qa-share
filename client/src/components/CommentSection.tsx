@@ -7,10 +7,11 @@ import { MessageCircle, CheckCircle, Reply, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface CommentSectionProps {
-    bugId: string;
+    bugId?: string;
+    taskId?: string;
 }
 
-export default function CommentSection({ bugId }: CommentSectionProps) {
+export default function CommentSection({ bugId, taskId }: CommentSectionProps) {
     // const { addComment, markCommentAsResolved } = useData();
     const { user } = useAuth();
     const [newComment, setNewComment] = useState('');
@@ -19,32 +20,35 @@ export default function CommentSection({ bugId }: CommentSectionProps) {
     const [showResolved, setShowResolved] = useState(false);
     const [comments, setComments] = useState<Comment[]>([]);
 
+    const entityId = bugId || taskId;
+
     useEffect(() => {
         const fetchComments = async () => {
+            if (!entityId) return;
             try {
                 // We need to import api here or pass it down. 
                 // Since we are inside a component, we can import it.
                 // But wait, we didn't export api from DataContext. 
                 // Let's import it directly.
-                const res = await import('../lib/api').then(m => m.default.get(`/comments/${bugId}`));
+                const res = await import('../lib/api').then(m => m.default.get(`/comments/${entityId}`));
                 setComments(res.data);
             } catch (err) {
                 console.error(err);
             }
         };
         fetchComments();
-    }, [bugId]);
+    }, [entityId]);
 
-    // Filter comments for this bug
-    const bugComments = comments.filter(c => !c.resolved || showResolved);
-    const topLevelComments = bugComments.filter(c => !c.parentId);
+    // Filter comments for this entity
+    const entityComments = comments.filter(c => !c.resolved || showResolved);
+    const topLevelComments = entityComments.filter(c => !c.parentId);
 
     const getReplies = (parentId: string) => {
-        return bugComments.filter(c => c.parentId === parentId);
+        return entityComments.filter(c => c.parentId === parentId);
     };
 
     const handleAddComment = async () => {
-        if (!newComment.trim() || !user) return;
+        if (!newComment.trim() || !user || !entityId) return;
 
         // We need to call addComment from context but also update local state.
         // Actually DataContext.addComment updates global state, but we disconnected that.
@@ -55,10 +59,11 @@ export default function CommentSection({ bugId }: CommentSectionProps) {
 
         try {
             const api = (await import('../lib/api')).default;
-            const res = await api.post('/comments', {
-                bugId,
-                content: newComment.trim()
-            });
+            const payload: any = { content: newComment.trim() };
+            if (bugId) payload.bugId = bugId;
+            if (taskId) payload.taskId = taskId;
+
+            const res = await api.post('/comments', payload);
             setComments([...comments, res.data]);
             setNewComment('');
         } catch (err) {
@@ -67,15 +72,18 @@ export default function CommentSection({ bugId }: CommentSectionProps) {
     };
 
     const handleAddReply = async (parentId: string) => {
-        if (!replyContent.trim() || !user) return;
+        if (!replyContent.trim() || !user || !entityId) return;
 
         try {
             const api = (await import('../lib/api')).default;
-            const res = await api.post('/comments', {
-                bugId,
+            const payload: any = {
                 content: replyContent.trim(),
                 parentId
-            });
+            };
+            if (bugId) payload.bugId = bugId;
+            if (taskId) payload.taskId = taskId;
+
+            const res = await api.post('/comments', payload);
             setComments([...comments, res.data]);
             setReplyContent('');
             setReplyTo(null);
@@ -105,7 +113,7 @@ export default function CommentSection({ bugId }: CommentSectionProps) {
                 <div className="flex items-center gap-2">
                     <MessageCircle size={18} className="text-primary" />
                     <h3 className="font-semibold">Comments</h3>
-                    <span className="text-xs text-muted-foreground">({bugComments.length})</span>
+                    <span className="text-xs text-muted-foreground">({entityComments.length})</span>
                 </div>
                 <Button
                     variant="ghost"
