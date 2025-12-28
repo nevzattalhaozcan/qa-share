@@ -44,7 +44,10 @@ export default function CreateProject() {
                 devCanCreateBugs: true,
                 devCanEditBugs: false,
                 devCanEditBugStatusOnly: true,
-                devCanViewNotes: false
+                devCanViewNotes: false,
+                devCanViewTasks: true,
+                devCanCreateTasks: false,
+                devCanEditTasks: false
             }
         });
 
