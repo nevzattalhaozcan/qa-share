@@ -17,6 +17,8 @@ import CreateProject from "./pages/CreateProject";
 import ProjectSettings from "./pages/ProjectSettings";
 import EditTestCase from "./pages/EditTestCase";
 import EditBug from "./pages/EditBug";
+import Tasks from "./pages/Tasks";
+import CreateTask from "./pages/CreateTask";
 
 // Protected Route Component
 const ProtectedRoute = () => {
@@ -89,6 +91,14 @@ const router = createHashRouter([
       {
         path: "/bugs/:id/edit",
         element: <EditBug />,
+      },
+      {
+        path: "/tasks",
+        element: <Tasks />,
+      },
+      {
+        path: "/tasks/create",
+        element: <CreateTask />,
       },
       {
         path: "/profile",

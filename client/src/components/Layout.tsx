@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, Bug, PlusCircle, FileText, User, X } from "lucide-react";
+import { Home, Bug, PlusCircle, FileText, User, X, CheckSquare } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
@@ -34,6 +34,7 @@ export default function Layout() {
         { icon: FileText, label: "Tests", path: "/tests" },
         { icon: PlusCircle, label: "Create", path: "/tests/create", primary: true },
         { icon: Bug, label: "Bugs", path: "/bugs" },
+        { icon: CheckSquare, label: "Tasks", path: "/tasks" },
         { icon: User, label: "Profile", path: "/profile" },
     ];
 
@@ -102,6 +103,19 @@ export default function Layout() {
                                         <Bug size={20} />
                                     </div>
                                     <span className="font-medium">New Bug</span>
+                                </button>
+
+                                <button
+                                    onClick={() => {
+                                        navigate('/tasks/create');
+                                        setShowCreateMenu(false);
+                                    }}
+                                    className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
+                                >
+                                    <div className="p-2 rounded-lg bg-green-500/20 text-green-400">
+                                        <CheckSquare size={20} />
+                                    </div>
+                                    <span className="font-medium">New Task</span>
                                 </button>
                             </motion.div>
                         </>

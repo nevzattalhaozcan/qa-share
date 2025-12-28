@@ -51,6 +51,7 @@ import notificationRoutes from './routes/notificationRoutes';
 import noteRoutes from './routes/noteRoutes';
 import uploadRoutes from './routes/uploadRoutes';
 import testRunRoutes from './routes/testRunRoutes';
+import taskRoutes from './routes/taskRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
@@ -61,6 +62,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/test-runs', testRunRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // Basic route
 app.get('/', (req, res) => {

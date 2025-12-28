@@ -66,6 +66,19 @@ export interface Bug {
     friendlyId?: string;
 }
 
+export interface Task {
+    id: string;
+    projectId: string;
+    title: string;
+    description: string;
+    status: 'To Do' | 'In Progress' | 'Done';
+    tags?: string[];
+    additionalInfo?: string;
+    attachments?: string[];
+    createdBy: string;
+    createdAt: string;
+}
+
 export interface Note {
     id: string;
     projectId: string;
@@ -103,6 +116,7 @@ interface DataContextType {
     projects: Project[];
     testCases: TestCase[];
     bugs: Bug[];
+    tasks: Task[];
     notes: Note[];
     notifications: Notification[];
     comments: Comment[];
@@ -120,6 +134,9 @@ interface DataContextType {
     updateBug: (id: string, updates: Partial<Omit<Bug, 'id' | 'createdAt' | 'createdBy'>>) => void;
     deleteTestCase: (id: string) => void;
     deleteBug: (id: string) => void;
+    addTask: (task: Omit<Task, 'id' | 'createdAt' | 'createdBy'>) => Promise<Task | null>;
+    updateTask: (id: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'createdBy'>>) => void;
+    deleteTask: (id: string) => void;
     updateBugStatus: (id: string, status: Bug['status']) => void;
     updateTestCaseStatus: (id: string, status: TestCase['status']) => void;
     addNote: (note: Omit<Note, 'id' | 'createdAt'>) => void;
@@ -141,6 +158,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const [projects, setProjects] = useState<Project[]>([]);
     const [testCases, setTestCases] = useState<TestCase[]>([]);
     const [bugs, setBugs] = useState<Bug[]>([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
     const [notes, setNotes] = useState<Note[]>([]);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [comments, setComments] = useState<Comment[]>([]);
@@ -152,17 +170,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const fetchData = async () => {
         try {
             setIsLoading(true);
-            const [projectsRes, testsRes, bugsRes, notificationsRes] = await Promise.all([
+            const [projectsRes, testsRes, bugsRes, notificationsRes, tasksRes] = await Promise.all([
                 api.get('/projects'),
                 api.get('/tests'),
                 api.get('/bugs'),
                 api.get('/notifications'),
+                activeProjectId ? api.get(`/tasks?projectId=${activeProjectId}`) : Promise.resolve({ data: [] }),
             ]);
 
             setProjects(projectsRes.data);
             setTestCases(testsRes.data);
             setBugs(bugsRes.data);
             setNotifications(notificationsRes.data);
+            setTasks(tasksRes.data || []);
 
             // Active Project - only set if not already set from localStorage
             const storedProjectId = localStorage.getItem('activeProjectId');
@@ -192,11 +212,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
                 try {
                     const res = await api.get(`/notes?projectId=${activeProjectId}`);
                     setNotes(res.data);
+
+                    const tasksRes = await api.get(`/tasks?projectId=${activeProjectId}`);
+                    setTasks(tasksRes.data);
                 } catch (err) {
                     console.error('Error fetching notes:', err);
                 }
             } else {
                 setNotes([]);
+                setTasks([]);
             }
         };
 
@@ -473,6 +497,35 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'createdBy'>) => {
+        try {
+            const res = await api.post('/tasks', task);
+            setTasks([res.data, ...tasks]);
+            return res.data;
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
+    };
+
+    const updateTask = async (id: string, updates: Partial<Omit<Task, 'id' | 'createdAt' | 'createdBy'>>) => {
+        try {
+            const res = await api.put(`/tasks/${id}`, updates);
+            setTasks(tasks.map(t => (t.id === id || (t as any)._id === id) ? res.data : t));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const deleteTask = async (id: string) => {
+        try {
+            await api.delete(`/tasks/${id}`);
+            setTasks(tasks.filter(t => t.id !== id && (t as any)._id !== id));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const updateTestCase = async (id: string, updates: Partial<Omit<TestCase, 'id' | 'createdAt' | 'createdBy'>>) => {
         try {
             const res = await api.put(`/tests/${id}`, updates);
@@ -496,6 +549,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             projects,
             testCases,
             bugs,
+            tasks,
             notes,
             notifications,
             comments,
@@ -507,6 +561,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             updateProjectPermissions,
             addTeamMember,
             removeTeamMember,
+            addTask,
+            updateTask,
+            deleteTask,
             addTestCase,
             updateTestCase,
             addBug,

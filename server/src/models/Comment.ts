@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 
 const commentSchema = new mongoose.Schema({
-    bugId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug', required: true },
+    bugId: { type: mongoose.Schema.Types.ObjectId, ref: 'Bug' },
+    taskId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
     userId: { type: String, required: true },
     userName: { type: String, required: true },
     content: { type: String, required: true },
