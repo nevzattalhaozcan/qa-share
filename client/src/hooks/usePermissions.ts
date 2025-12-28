@@ -24,6 +24,9 @@ export const usePermissions = () => {
             canEditBugs: true,
             canEditBugStatus: true,
             canViewNotes: true,
+            canViewTasks: true,
+            canCreateTasks: true,
+            canEditTasks: true,
             canManagePermissions: true,
         };
     }
@@ -39,6 +42,9 @@ export const usePermissions = () => {
             canEditBugs: permissions.devCanEditBugs,
             canEditBugStatus: permissions.devCanEditBugStatusOnly || permissions.devCanEditBugs,
             canViewNotes: permissions.devCanViewNotes,
+            canViewTasks: permissions.devCanViewTasks,
+            canCreateTasks: permissions.devCanCreateTasks,
+            canEditTasks: permissions.devCanEditTasks,
             canManagePermissions: false,
         };
     }
@@ -53,6 +59,9 @@ export const usePermissions = () => {
         canEditBugs: false,
         canEditBugStatus: false,
         canViewNotes: false,
+        canViewTasks: false,
+        canCreateTasks: false,
+        canEditTasks: false,
         canManagePermissions: false,
     };
 };

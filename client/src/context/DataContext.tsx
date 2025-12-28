@@ -18,6 +18,9 @@ export interface ProjectPermissions {
     devCanEditBugs: boolean;
     devCanEditBugStatusOnly: boolean;
     devCanViewNotes: boolean;
+    devCanViewTasks: boolean;
+    devCanCreateTasks: boolean;
+    devCanEditTasks: boolean;
 }
 
 export interface Project {
@@ -72,6 +75,7 @@ export interface Task {
     title: string;
     description: string;
     status: 'To Do' | 'In Progress' | 'Done';
+    priority: 'Low' | 'Medium' | 'High';
     tags?: string[];
     additionalInfo?: string;
     attachments?: string[];

@@ -7,8 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUrlFilters } from '../hooks/useUrlFilters';
 import { useScrollPosition } from '../hooks/useScrollPosition';
 
+import { usePermissions } from '../hooks/usePermissions';
+
 export default function Tasks() {
     const { tasks, activeProjectId, isLoading } = useData();
+    const { canCreateTasks } = usePermissions();
     const location = useLocation();
     const [showFilters, setShowFilters] = useState(false);
     const [showSortMenu, setShowSortMenu] = useState(false);
@@ -31,6 +34,12 @@ export default function Tasks() {
         'Done': 2
     };
 
+    const priorityOrder = {
+        'High': 2,
+        'Medium': 1,
+        'Low': 0
+    };
+
     // Filter tasks
     const filteredTasks = projectTasks.filter(task => {
         if (filters.status.length > 0 && !filters.status.includes(task.status)) {
@@ -48,8 +57,11 @@ export default function Tasks() {
             case 'oldest':
                 return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
             case 'status':
-                return (statusPriority[a.status as keyof typeof statusPriority] || 99) -
-                    (statusPriority[b.status as keyof typeof statusPriority] || 99);
+                return (statusPriority[a.status as keyof typeof statusPriority] || 0) -
+                    (statusPriority[b.status as keyof typeof statusPriority] || 0);
+            case 'priority':
+                return (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) -
+                    (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
             case 'newest':
             default:
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -60,6 +72,12 @@ export default function Tasks() {
         'To Do': 'bg-slate-500/10 text-slate-500',
         'In Progress': 'bg-blue-500/10 text-blue-500',
         'Done': 'bg-green-500/10 text-green-500'
+    };
+
+    const priorityColors: Record<string, string> = {
+        'High': 'text-orange-500',
+        'Medium': 'text-blue-500',
+        'Low': 'text-slate-500'
     };
 
     // Show loading skeleton
@@ -87,6 +105,15 @@ export default function Tasks() {
                             {task.status}
                         </span>
                     </div>
+
+                    <div className="flex items-center gap-2 mb-2">
+                        {task.priority && (
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white/5 border border-white/5 ${priorityColors[task.priority]}`}>
+                                {task.priority} Priority
+                            </span>
+                        )}
+                    </div>
+
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{task.description}</p>
                     {task.tags && task.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
@@ -149,6 +176,7 @@ export default function Tasks() {
                                                 { label: 'Newest First', value: 'newest' },
                                                 { label: 'Oldest First', value: 'oldest' },
                                                 { label: 'By Status', value: 'status' },
+                                                { label: 'By Priority', value: 'priority' },
                                             ].map((option) => (
                                                 <button
                                                     key={option.value}
@@ -181,12 +209,14 @@ export default function Tasks() {
                     >
                         <Filter size={24} />
                     </button>
-                    <Link
-                        to="/tasks/create"
-                        className="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors"
-                    >
-                        <Plus size={24} />
-                    </Link>
+                    {canCreateTasks && (
+                        <Link
+                            to="/tasks/create"
+                            className="p-2 bg-primary/10 text-primary rounded-full hover:bg-primary/20 transition-colors"
+                        >
+                            <Plus size={24} />
+                        </Link>
+                    )}
                 </div>
             </div>
 

@@ -4,16 +4,34 @@ import { useData } from '../context/DataContext';
 import { ArrowLeft, Save, Upload, X } from 'lucide-react';
 import TagInput from '../components/TagInput';
 import api from '../lib/api';
+import { usePermissions } from '../hooks/usePermissions';
 
 export default function CreateTask() {
     const navigate = useNavigate();
     const { activeProjectId, addTask } = useData();
+    const { canCreateTasks } = usePermissions();
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    if (!canCreateTasks) {
+        return (
+            <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                <p className="text-xl font-semibold text-red-400">Permission Denied</p>
+                <p className="text-muted-foreground">You do not have permission to create tasks in this project.</p>
+                <button
+                    onClick={() => navigate('/tasks')}
+                    className="px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                >
+                    Back to Tasks
+                </button>
+            </div>
+        );
+    }
 
     // Form state
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [status, setStatus] = useState<'To Do' | 'In Progress' | 'Done'>('To Do');
+    const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
     const [tags, setTags] = useState<string[]>([]);
     const [additionalInfo, setAdditionalInfo] = useState('');
 
@@ -60,6 +78,7 @@ export default function CreateTask() {
                 title,
                 description,
                 status,
+                priority,
                 tags,
                 additionalInfo,
                 attachments,
@@ -99,23 +118,47 @@ export default function CreateTask() {
                     />
                 </div>
 
-                {/* Status */}
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Status</label>
-                    <div className="flex bg-white/5 p-1 rounded-xl">
-                        {(['To Do', 'In Progress', 'Done'] as const).map((s) => (
-                            <button
-                                key={s}
-                                type="button"
-                                onClick={() => setStatus(s)}
-                                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${status === s
-                                    ? 'bg-primary text-white shadow-lg'
-                                    : 'text-muted-foreground hover:text-white'
-                                    }`}
-                            >
-                                {s}
-                            </button>
-                        ))}
+                <div className="grid grid-cols-2 gap-4">
+                    {/* Status */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">Status</label>
+                        <div className="flex bg-white/5 p-1 rounded-xl">
+                            {(['To Do', 'In Progress', 'Done'] as const).map((s) => (
+                                <button
+                                    key={s}
+                                    type="button"
+                                    onClick={() => setStatus(s)}
+                                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${status === s
+                                        ? 'bg-primary text-white shadow-lg'
+                                        : 'text-muted-foreground hover:text-white'
+                                        }`}
+                                >
+                                    {s}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Priority */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">Priority</label>
+                        <div className="flex bg-white/5 p-1 rounded-xl">
+                            {(['Low', 'Medium', 'High'] as const).map((p) => (
+                                <button
+                                    key={p}
+                                    type="button"
+                                    onClick={() => setPriority(p)}
+                                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${priority === p
+                                            ? (p === 'High' ? 'bg-orange-500 text-white shadow-lg' :
+                                                p === 'Medium' ? 'bg-blue-500 text-white shadow-lg' :
+                                                    'bg-slate-500 text-white shadow-lg')
+                                            : 'text-muted-foreground hover:text-white'
+                                        }`}
+                                >
+                                    {p}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 </div>
 

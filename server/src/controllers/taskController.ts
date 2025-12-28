@@ -16,12 +16,13 @@ export const getTasks = async (req: Request, res: Response) => {
 
 export const createTask = async (req: Request, res: Response) => {
     try {
-        const { projectId, title, description, status, tags, additionalInfo, attachments } = req.body;
+        const { projectId, title, description, status, priority, tags, additionalInfo, attachments } = req.body;
         const task = new Task({
             projectId,
             title,
             description,
             status,
+            priority,
             tags,
             additionalInfo,
             attachments,
@@ -37,7 +38,7 @@ export const createTask = async (req: Request, res: Response) => {
 
 export const updateTask = async (req: Request, res: Response) => {
     try {
-        const { title, description, status, tags, additionalInfo, attachments } = req.body;
+        const { title, description, status, priority, tags, additionalInfo, attachments } = req.body;
         let task = await Task.findById(req.params.id);
 
         if (!task) {
@@ -47,6 +48,7 @@ export const updateTask = async (req: Request, res: Response) => {
         task.title = title || task.title;
         task.description = description || task.description;
         task.status = status || task.status;
+        task.priority = priority || task.priority;
         task.tags = tags || task.tags;
         task.additionalInfo = additionalInfo || task.additionalInfo;
         task.attachments = attachments || task.attachments;

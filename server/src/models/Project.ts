@@ -17,6 +17,9 @@ const projectPermissionsSchema = new mongoose.Schema({
     devCanEditBugs: { type: Boolean, default: false },
     devCanEditBugStatusOnly: { type: Boolean, default: true },
     devCanViewNotes: { type: Boolean, default: false },
+    devCanViewTasks: { type: Boolean, default: true },
+    devCanCreateTasks: { type: Boolean, default: false },
+    devCanEditTasks: { type: Boolean, default: false },
 });
 
 const projectSchema = new mongoose.Schema({

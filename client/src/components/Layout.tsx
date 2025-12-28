@@ -6,12 +6,14 @@ import { useData } from "../context/DataContext";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import NotificationBell from "./NotificationBell";
+import { usePermissions } from "../hooks/usePermissions";
 
 export default function Layout() {
     const navigate = useNavigate();
     const location = useLocation();
     const { createPreference } = useAuth();
     const { projects, activeProjectId } = useData();
+    const { canViewTasks, canCreateTasks } = usePermissions();
     const [showCreateMenu, setShowCreateMenu] = useState(false);
 
     const activeProject = projects.find(p => {
@@ -34,7 +36,8 @@ export default function Layout() {
         { icon: FileText, label: "Tests", path: "/tests" },
         { icon: PlusCircle, label: "Create", path: "/tests/create", primary: true },
         { icon: Bug, label: "Bugs", path: "/bugs" },
-        { icon: CheckSquare, label: "Tasks", path: "/tasks" },
+        // Only show Tasks if allowed
+        ...(canViewTasks ? [{ icon: CheckSquare, label: "Tasks", path: "/tasks" }] : []),
         { icon: User, label: "Profile", path: "/profile" },
     ];
 
@@ -105,18 +108,20 @@ export default function Layout() {
                                     <span className="font-medium">New Bug</span>
                                 </button>
 
-                                <button
-                                    onClick={() => {
-                                        navigate('/tasks/create');
-                                        setShowCreateMenu(false);
-                                    }}
-                                    className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
-                                >
-                                    <div className="p-2 rounded-lg bg-green-500/20 text-green-400">
-                                        <CheckSquare size={20} />
-                                    </div>
-                                    <span className="font-medium">New Task</span>
-                                </button>
+                                {canCreateTasks && (
+                                    <button
+                                        onClick={() => {
+                                            navigate('/tasks/create');
+                                            setShowCreateMenu(false);
+                                        }}
+                                        className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
+                                    >
+                                        <div className="p-2 rounded-lg bg-green-500/20 text-green-400">
+                                            <CheckSquare size={20} />
+                                        </div>
+                                        <span className="font-medium">New Task</span>
+                                    </button>
+                                )}
                             </motion.div>
                         </>
                     )}

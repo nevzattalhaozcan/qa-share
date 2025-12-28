@@ -26,7 +26,11 @@ export default function ProjectSettings() {
         devCanCreateBugs: false,
         devCanEditBugs: false,
         devCanEditBugStatusOnly: true,
+        // Duplicate removed
         devCanViewNotes: false,
+        devCanViewTasks: true,
+        devCanCreateTasks: false,
+        devCanEditTasks: false,
     };
 
     const [permissions, setPermissions] = useState<ProjectPermissions>(
@@ -83,9 +87,9 @@ export default function ProjectSettings() {
                     <h1 className="text-xl font-bold">{project.name}</h1>
                     <p className="text-sm text-muted-foreground">Developer Permissions</p>
                 </div>
-                <Button 
-                    variant="ghost" 
-                    size="icon" 
+                <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setShowDeleteModal(true)}
                     className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
                     title="Delete Project"
@@ -159,6 +163,27 @@ export default function ProjectSettings() {
                                 checked={permissions.devCanEditBugStatusOnly}
                                 onChange={() => togglePermission('devCanEditBugStatusOnly')}
                                 description="Allows changing status without editing other fields"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="pt-2">
+                        <h4 className="font-medium mb-3">Tasks</h4>
+                        <div className="space-y-2">
+                            <PermissionToggle
+                                label="View Tasks"
+                                checked={permissions.devCanViewTasks}
+                                onChange={() => togglePermission('devCanViewTasks')}
+                            />
+                            <PermissionToggle
+                                label="Create Tasks"
+                                checked={permissions.devCanCreateTasks}
+                                onChange={() => togglePermission('devCanCreateTasks')}
+                            />
+                            <PermissionToggle
+                                label="Edit Tasks"
+                                checked={permissions.devCanEditTasks}
+                                onChange={() => togglePermission('devCanEditTasks')}
                             />
                         </div>
                     </div>
