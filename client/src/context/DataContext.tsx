@@ -242,6 +242,17 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    // Listen for project switch events from Layout
+    useEffect(() => {
+        const handleSwitchProject = (event: CustomEvent<string>) => {
+            handleSetActiveProjectId(event.detail);
+        };
+        window.addEventListener('switchProject', handleSwitchProject as EventListener);
+        return () => {
+            window.removeEventListener('switchProject', handleSwitchProject as EventListener);
+        };
+    }, []);
+
     const addProject = async (project: Omit<Project, 'id' | 'createdAt'>) => {
         try {
             const res = await api.post('/projects', project);

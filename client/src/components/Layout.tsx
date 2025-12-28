@@ -1,5 +1,5 @@
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Home, Bug, PlusCircle, FileText, User, X, CheckSquare } from "lucide-react";
+import { Home, Bug, PlusCircle, FileText, User, X, CheckSquare, ChevronDown, Check } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../context/AuthContext";
 import { useData } from "../context/DataContext";
@@ -15,6 +15,7 @@ export default function Layout() {
     const { projects, activeProjectId } = useData();
     const { canViewTasks, canCreateTasks } = usePermissions();
     const [showCreateMenu, setShowCreateMenu] = useState(false);
+    const [showProjectMenu, setShowProjectMenu] = useState(false);
 
     const activeProject = projects.find(p => {
         const pId = (p as any)._id || p.id;
@@ -44,9 +45,12 @@ export default function Layout() {
         <div className="min-h-screen bg-background pb-24">
             {/* Header */}
             <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-6 py-4 flex items-center justify-between">
-                <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
+                <button
+                    onClick={() => navigate('/')}
+                    className="text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+                >
                     QA Share
-                </h1>
+                </button>
 
                 {/* Create Button - Centered */}
                 <button
@@ -62,14 +66,69 @@ export default function Layout() {
 
                 <div className="flex items-center gap-3">
                     {activeProject && (
-                        <div className="text-right">
-                            <div className="text-xs text-muted-foreground">Project</div>
-                            <div className="text-sm font-semibold truncate max-w-[120px]">{activeProject.name}</div>
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowProjectMenu(!showProjectMenu)}
+                                className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 transition-colors text-right"
+                            >
+                                <div>
+                                    <div className="text-xs text-muted-foreground">Project</div>
+                                    <div className="text-sm font-semibold truncate max-w-[100px]">{activeProject.name}</div>
+                                </div>
+                                <ChevronDown size={16} className={cn("text-muted-foreground transition-transform", showProjectMenu && "rotate-180")} />
+                            </button>
                         </div>
                     )}
                     <NotificationBell />
                 </div>
             </header>
+
+            {/* Project Switcher Dropdown */}
+            <AnimatePresence>
+                {showProjectMenu && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowProjectMenu(false)}
+                            className="fixed inset-0 z-40"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="fixed top-16 right-4 w-56 glass-card bg-slate-900/95 rounded-xl border border-white/10 shadow-xl z-50 overflow-hidden"
+                        >
+                            <div className="p-2 space-y-1 max-h-64 overflow-y-auto">
+                                {projects.map((project) => {
+                                    const projectId = (project as any)._id || project.id;
+                                    const isActive = projectId === activeProjectId;
+                                    return (
+                                        <button
+                                            key={projectId}
+                                            onClick={() => {
+                                                navigate('/');
+                                                // Set active project via context
+                                                const event = new CustomEvent('switchProject', { detail: projectId });
+                                                window.dispatchEvent(event);
+                                                setShowProjectMenu(false);
+                                            }}
+                                            className={cn(
+                                                "w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-colors",
+                                                isActive ? "bg-primary/20 text-primary" : "hover:bg-white/10 text-white"
+                                            )}
+                                        >
+                                            <span className="truncate font-medium">{project.name}</span>
+                                            {isActive && <Check size={16} />}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Create Menu Popup */}
             <AnimatePresence>
