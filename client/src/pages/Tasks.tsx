@@ -6,12 +6,12 @@ import { PageLoadingSkeleton } from '../components/ui/Skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUrlFilters } from '../hooks/useUrlFilters';
 import { useScrollPosition } from '../hooks/useScrollPosition';
-
+import StatusDropdown from '../components/StatusDropdown';
 import { usePermissions } from '../hooks/usePermissions';
 
 export default function Tasks() {
-    const { tasks, activeProjectId, isLoading } = useData();
-    const { canCreateTasks } = usePermissions();
+    const { tasks, activeProjectId, isLoading, updateTask } = useData();
+    const { canCreateTasks, canEditTasks } = usePermissions();
     const location = useLocation();
     const [showFilters, setShowFilters] = useState(false);
     const [showSortMenu, setShowSortMenu] = useState(false);
@@ -101,19 +101,13 @@ export default function Tasks() {
                         <div className="flex-1">
                             <h3 className="font-semibold text-lg">{task.title}</h3>
                         </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[task.status]}`}>
-                            {task.status}
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.priority === 'High' ? 'bg-orange-500/20 text-orange-500' :
+                                task.priority === 'Medium' ? 'bg-blue-500/20 text-blue-500' :
+                                    'bg-slate-500/20 text-slate-400'
+                            }`}>
+                            {task.priority}
                         </span>
                     </div>
-
-                    <div className="flex items-center gap-2 mb-2">
-                        {task.priority && (
-                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-white/5 border border-white/5 ${priorityColors[task.priority]}`}>
-                                {task.priority} Priority
-                            </span>
-                        )}
-                    </div>
-
                     <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{task.description}</p>
                     {task.tags && task.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
@@ -128,11 +122,20 @@ export default function Tasks() {
 
                 <div className="flex items-center justify-between pt-2 border-t border-white/5 mt-2">
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            {task.attachments && task.attachments.length > 0 && (
-                                <span title={`${task.attachments.length} attachments`}>📎 {task.attachments.length}</span>
-                            )}
-                        </div>
+                        <StatusDropdown
+                            currentStatus={task.status}
+                            options={['To Do', 'In Progress', 'Done']}
+                            onUpdate={(status) => updateTask(taskId, { status: status as any })}
+                            colorMap={{
+                                'To Do': 'bg-slate-500/10 text-slate-400',
+                                'In Progress': 'bg-blue-500/10 text-blue-500',
+                                'Done': 'bg-green-500/10 text-green-500'
+                            }}
+                            disabled={!canEditTasks && !canCreateTasks}
+                        />
+                        {task.attachments && task.attachments.length > 0 && (
+                            <span className="text-xs text-muted-foreground" title={`${task.attachments.length} attachments`}>📎 {task.attachments.length}</span>
+                        )}
                     </div>
                     <span className="text-xs text-muted-foreground">{new Date(task.createdAt).toLocaleDateString()}</span>
                 </div>
