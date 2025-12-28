@@ -44,10 +44,10 @@ export default function Layout() {
     return (
         <div className="min-h-screen bg-background pb-24">
             {/* Header */}
-            <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-6 py-4 flex items-center justify-between">
+            <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-white/5 px-4 py-2 flex items-center justify-between">
                 <button
                     onClick={() => navigate('/')}
-                    className="text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
+                    className="text-lg font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity"
                 >
                     QA Share
                 </button>
@@ -56,26 +56,24 @@ export default function Layout() {
                 <button
                     onClick={handleCreateClick}
                     className={cn(
-                        "absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white font-semibold shadow-lg shadow-primary/30 hover:scale-105 transition-transform active:scale-95",
+                        "absolute left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-sm font-medium shadow-md shadow-primary/25 hover:scale-105 transition-transform active:scale-95",
                         showCreateMenu && "bg-slate-700"
                     )}
                 >
-                    {showCreateMenu ? <X size={18} /> : <PlusCircle size={18} />}
+                    {showCreateMenu ? <X size={14} /> : <PlusCircle size={14} />}
                     <span>Create</span>
                 </button>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {activeProject && (
                         <div className="relative">
                             <button
                                 onClick={() => setShowProjectMenu(!showProjectMenu)}
-                                className="flex items-center gap-2 p-2 rounded-lg hover:bg-white/10 transition-colors text-right"
+                                className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
                             >
-                                <div>
-                                    <div className="text-xs text-muted-foreground">Project</div>
-                                    <div className="text-sm font-semibold truncate max-w-[100px]">{activeProject.name}</div>
-                                </div>
-                                <ChevronDown size={16} className={cn("text-muted-foreground transition-transform", showProjectMenu && "rotate-180")} />
+                                <span className="text-xs text-muted-foreground">Project</span>
+                                <span className="text-sm font-semibold truncate max-w-[80px]">{activeProject.name}</span>
+                                <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", showProjectMenu && "rotate-180")} />
                             </button>
                         </div>
                     )}
@@ -193,7 +191,7 @@ export default function Layout() {
             </AnimatePresence>
 
             {/* Main Content */}
-            <main className="pt-24 px-4 max-w-md mx-auto">
+            <main className="pt-16 px-4 max-w-md mx-auto">
                 <Outlet />
             </main>
 
