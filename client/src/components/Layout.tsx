@@ -34,7 +34,6 @@ export default function Layout() {
     const navItems = [
         { icon: Home, label: "Home", path: "/" },
         { icon: FileText, label: "Tests", path: "/tests" },
-        { icon: PlusCircle, label: "Create", path: "/tests/create", primary: true },
         { icon: Bug, label: "Bugs", path: "/bugs" },
         // Only show Tasks if allowed
         ...(canViewTasks ? [{ icon: CheckSquare, label: "Tasks", path: "/tasks" }] : []),
@@ -48,6 +47,19 @@ export default function Layout() {
                 <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
                     QA Share
                 </h1>
+
+                {/* Create Button - Centered */}
+                <button
+                    onClick={handleCreateClick}
+                    className={cn(
+                        "absolute left-1/2 -translate-x-1/2 flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white font-semibold shadow-lg shadow-primary/30 hover:scale-105 transition-transform active:scale-95",
+                        showCreateMenu && "bg-slate-700"
+                    )}
+                >
+                    {showCreateMenu ? <X size={18} /> : <PlusCircle size={18} />}
+                    <span>Create</span>
+                </button>
+
                 <div className="flex items-center gap-3">
                     {activeProject && (
                         <div className="text-right">
@@ -59,6 +71,68 @@ export default function Layout() {
                 </div>
             </header>
 
+            {/* Create Menu Popup */}
+            <AnimatePresence>
+                {showCreateMenu && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowCreateMenu(false)}
+                            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+                        />
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: -20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: -20 }}
+                            className="fixed top-20 left-1/2 -translate-x-1/2 flex flex-col gap-3 w-48 z-50"
+                        >
+                            <button
+                                onClick={() => {
+                                    navigate('/tests/create');
+                                    setShowCreateMenu(false);
+                                }}
+                                className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
+                            >
+                                <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
+                                    <FileText size={20} />
+                                </div>
+                                <span className="font-medium">New Test Case</span>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    navigate('/bugs/create');
+                                    setShowCreateMenu(false);
+                                }}
+                                className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
+                            >
+                                <div className="p-2 rounded-lg bg-red-500/20 text-red-400">
+                                    <Bug size={20} />
+                                </div>
+                                <span className="font-medium">New Bug</span>
+                            </button>
+
+                            {canCreateTasks && (
+                                <button
+                                    onClick={() => {
+                                        navigate('/tasks/create');
+                                        setShowCreateMenu(false);
+                                    }}
+                                    className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
+                                >
+                                    <div className="p-2 rounded-lg bg-green-500/20 text-green-400">
+                                        <CheckSquare size={20} />
+                                    </div>
+                                    <span className="font-medium">New Task</span>
+                                </button>
+                            )}
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+
             {/* Main Content */}
             <main className="pt-20 px-4 max-w-md mx-auto">
                 <Outlet />
@@ -66,86 +140,12 @@ export default function Layout() {
 
             {/* Mobile Bottom Navigation */}
             <nav className="fixed bottom-0 left-0 right-0 z-50 glass border-t border-white/5 pb-safe">
-                <AnimatePresence>
-                    {showCreateMenu && (
-                        <>
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                onClick={() => setShowCreateMenu(false)}
-                                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[-1]"
-                            />
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                                animate={{ scale: 1, opacity: 1, y: 0 }}
-                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                                className="absolute bottom-24 left-1/2 -translate-x-1/2 flex flex-col gap-3 w-48"
-                            >
-                                <button
-                                    onClick={() => {
-                                        navigate('/tests/create');
-                                        setShowCreateMenu(false);
-                                    }}
-                                    className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
-                                >
-                                    <div className="p-2 rounded-lg bg-blue-500/20 text-blue-400">
-                                        <FileText size={20} />
-                                    </div>
-                                    <span className="font-medium">New Test Case</span>
-                                </button>
 
-                                <button
-                                    onClick={() => {
-                                        navigate('/bugs/create');
-                                        setShowCreateMenu(false);
-                                    }}
-                                    className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
-                                >
-                                    <div className="p-2 rounded-lg bg-red-500/20 text-red-400">
-                                        <Bug size={20} />
-                                    </div>
-                                    <span className="font-medium">New Bug</span>
-                                </button>
-
-                                {canCreateTasks && (
-                                    <button
-                                        onClick={() => {
-                                            navigate('/tasks/create');
-                                            setShowCreateMenu(false);
-                                        }}
-                                        className="glass-card bg-slate-900/95 p-4 rounded-xl hover:bg-white/10 transition-all flex items-center gap-3"
-                                    >
-                                        <div className="p-2 rounded-lg bg-green-500/20 text-green-400">
-                                            <CheckSquare size={20} />
-                                        </div>
-                                        <span className="font-medium">New Task</span>
-                                    </button>
-                                )}
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
 
                 <div className="flex items-center justify-around px-2 py-2">
                     {navItems.map((item) => {
                         const isActive = location.pathname === item.path;
                         const Icon = item.icon;
-
-                        if (item.primary) {
-                            return (
-                                <button
-                                    key={item.path}
-                                    onClick={handleCreateClick}
-                                    className={cn(
-                                        "relative -top-6 bg-primary text-white p-4 rounded-full shadow-lg shadow-primary/40 hover:scale-105 transition-transform active:scale-95 z-50",
-                                        showCreateMenu && "rotate-45 bg-slate-700"
-                                    )}
-                                >
-                                    {showCreateMenu ? <X size={24} /> : <Icon size={24} />}
-                                </button>
-                            );
-                        }
 
                         return (
                             <button
@@ -160,6 +160,8 @@ export default function Layout() {
                                 <span className="text-[10px] font-medium">{item.label}</span>
                             </button>
                         );
+
+
                     })}
                 </div>
             </nav>
