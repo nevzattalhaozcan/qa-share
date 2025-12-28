@@ -218,7 +218,7 @@ export default function TaskDetail() {
                                                         e.stopPropagation();
                                                         const taskId = (task as any)._id || task.id;
                                                         updateTask(taskId, {
-                                                            attachments: task.attachments.filter(u => u !== url)
+                                                            attachments: task.attachments?.filter(u => u !== url) ?? []
                                                         });
                                                     }}
                                                     className="absolute top-2 right-2 p-1.5 bg-red-500/80 hover:bg-red-500 rounded-full text-white opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10"
