@@ -74,12 +74,6 @@ export default function Tasks() {
         'Done': 'bg-green-500/10 text-green-500'
     };
 
-    const priorityColors: Record<string, string> = {
-        'High': 'text-orange-500',
-        'Medium': 'text-blue-500',
-        'Low': 'text-slate-500'
-    };
-
     // Show loading skeleton
     if (isLoading) {
         return (
@@ -102,8 +96,8 @@ export default function Tasks() {
                             <h3 className="font-semibold text-lg">{task.title}</h3>
                         </div>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${task.priority === 'High' ? 'bg-orange-500/20 text-orange-500' :
-                                task.priority === 'Medium' ? 'bg-blue-500/20 text-blue-500' :
-                                    'bg-slate-500/20 text-slate-400'
+                            task.priority === 'Medium' ? 'bg-blue-500/20 text-blue-500' :
+                                'bg-slate-500/20 text-slate-400'
                             }`}>
                             {task.priority}
                         </span>
