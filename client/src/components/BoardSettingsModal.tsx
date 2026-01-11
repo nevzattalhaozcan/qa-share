@@ -98,9 +98,11 @@ export default function BoardSettingsModal({ project, onClose }: BoardSettingsMo
                                             onChange={(e) => updateColumn(column.id, { status: e.target.value })}
                                             className="bg-transparent border-none p-0 text-sm focus:ring-0 text-primary cursor-pointer w-full"
                                         >
+                                            <option value="Backlog">Backlog</option>
                                             <option value="To Do">To Do</option>
                                             <option value="In Progress">Doing</option>
                                             <option value="Done">Done</option>
+                                            <option value="Archived">Archived</option>
                                         </select>
                                     </div>
                                 </div>

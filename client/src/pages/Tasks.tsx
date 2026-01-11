@@ -48,11 +48,6 @@ export default function Tasks() {
 
     // Filter tasks
     const filteredTasks = projectTasks.filter(task => {
-        // Board view filters out Backlog and Archived
-        if (view === 'board') {
-            if (task.status === 'Backlog' || task.status === 'Archived') return false;
-        }
-
         // List view filters out Archived unless toggled
         if (view === 'list') {
             if (task.status === 'Archived' && !showArchived) return false;
@@ -250,8 +245,8 @@ export default function Tasks() {
                         <button
                             onClick={() => setShowArchived(!showArchived)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${showArchived
-                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
-                                    : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+                                ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                : 'bg-white/5 text-muted-foreground hover:bg-white/10'
                                 }`}
                         >
                             {showArchived ? 'Hide Archived' : 'Show Archived'}
