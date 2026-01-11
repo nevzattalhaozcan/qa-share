@@ -9,6 +9,11 @@ const taskSchema = new mongoose.Schema({
     tags: [{ type: String }],
     additionalInfo: { type: String },
     attachments: [{ type: String }],
+    parentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Task' },
+    links: [{
+        targetType: { type: String, enum: ['Task', 'Bug', 'TestCase'], required: true },
+        targetId: { type: mongoose.Schema.Types.ObjectId, required: true }
+    }],
     createdBy: { type: String },
     createdAt: { type: Date, default: Date.now },
 });

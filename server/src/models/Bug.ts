@@ -17,6 +17,7 @@ const bugSchema = new mongoose.Schema({
     status: { type: String, enum: ['Draft', 'Opened', 'Fixed', 'Closed'], default: 'Draft' },
     tags: [{ type: String }],
     linkedTestCaseIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TestCase' }],
+    linkedTaskIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
     attachments: [{ type: String }],
     friendlyId: { type: String },
     createdBy: { type: String },

@@ -3,6 +3,7 @@ import { Bug } from '../models/Bug';
 import { TestCase } from '../models/TestCase';
 import { Project } from '../models/Project';
 import { Notification } from '../models/Notification';
+import { Task } from '../models/Task';
 
 // Helper to generate friendly ID
 const getNextFriendlyId = async (model: any, prefix: string) => {
@@ -30,9 +31,12 @@ export const createBug = async (req: Request, res: Response) => {
 
         const friendlyId = await getNextFriendlyId(Bug, 'BUG');
 
-        // Ensure linkedTestCaseIds has no duplicates
+        // Ensure linked ids have no duplicates
         if (bugData.linkedTestCaseIds && Array.isArray(bugData.linkedTestCaseIds)) {
             bugData.linkedTestCaseIds = [...new Set(bugData.linkedTestCaseIds.map(String))];
+        }
+        if (bugData.linkedTaskIds && Array.isArray(bugData.linkedTaskIds)) {
+            bugData.linkedTaskIds = [...new Set(bugData.linkedTaskIds.map(String))];
         }
 
         const newBug = new Bug({
@@ -52,20 +56,12 @@ export const createBug = async (req: Request, res: Response) => {
             );
         }
 
-        // Notify Developers
-        const project = await Project.findById(bug.projectId);
-        if (project) {
-            const devMembers = project.members.filter(m => m.role === 'DEV');
-            const notifications = devMembers.map(dev => ({
-                userId: String(dev.userId || dev._id), // Use userId or fallback to _id
-                type: 'bug_created',
-                bugId: bug._id,
-                bugTitle: bug.title,
-                message: `New bug created: ${bug.title}`
-            }));
-            if (notifications.length > 0) {
-                await Notification.insertMany(notifications);
-            }
+        // Handle task linking if provided
+        if (bugData.linkedTaskIds && bugData.linkedTaskIds.length > 0) {
+            await Task.updateMany(
+                { _id: { $in: bugData.linkedTaskIds } },
+                { $addToSet: { links: { targetType: 'Bug', targetId: bug._id } } }
+            );
         }
 
         res.json(bug);
@@ -79,27 +75,30 @@ export const updateBug = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const oldBug = await Bug.findById(id);
-        
-        // Ensure linkedTestCaseIds has no duplicates
+
+        // Ensure linked ids have no duplicates
         if (req.body.linkedTestCaseIds && Array.isArray(req.body.linkedTestCaseIds)) {
             req.body.linkedTestCaseIds = [...new Set(req.body.linkedTestCaseIds.map(String))];
         }
-        
+        if (req.body.linkedTaskIds && Array.isArray(req.body.linkedTaskIds)) {
+            req.body.linkedTaskIds = [...new Set(req.body.linkedTaskIds.map(String))];
+        }
+
         const bug = await Bug.findByIdAndUpdate(id, req.body, { new: true });
 
-        // Handle linking if linkedTestCaseIds is being updated
+        // Handle case linking if linkedTestCaseIds is being updated
         if (req.body.linkedTestCaseIds) {
             // Get the old linked test cases
             const oldLinks = oldBug?.linkedTestCaseIds || [];
             const newLinks = req.body.linkedTestCaseIds;
 
             // Find added test cases (in new but not in old)
-            const addedLinks = newLinks.filter((tcId: any) => 
+            const addedLinks = newLinks.filter((tcId: any) =>
                 !oldLinks.some((oldId: any) => oldId.toString() === tcId.toString())
             );
 
             // Find removed test cases (in old but not in new)
-            const removedLinks = oldLinks.filter((oldId: any) => 
+            const removedLinks = oldLinks.filter((oldId: any) =>
                 !newLinks.some((tcId: any) => tcId.toString() === oldId.toString())
             );
 
@@ -116,6 +115,34 @@ export const updateBug = async (req: Request, res: Response) => {
                 await TestCase.updateMany(
                     { _id: { $in: removedLinks } },
                     { $pull: { linkedBugIds: bug?._id } }
+                );
+            }
+        }
+
+        // Handle task linking if linkedTaskIds is being updated
+        if (req.body.linkedTaskIds) {
+            const oldTaskLinks = oldBug?.linkedTaskIds || [];
+            const newTaskLinks = req.body.linkedTaskIds;
+
+            const addedTaskLinks = newTaskLinks.filter((taskId: any) =>
+                !oldTaskLinks.some((oldId: any) => oldId.toString() === taskId.toString())
+            );
+
+            const removedTaskLinks = oldTaskLinks.filter((oldId: any) =>
+                !newTaskLinks.some((taskId: any) => taskId.toString() === oldId.toString())
+            );
+
+            if (addedTaskLinks.length > 0) {
+                await Task.updateMany(
+                    { _id: { $in: addedTaskLinks } },
+                    { $addToSet: { links: { targetType: 'Bug', targetId: id } } }
+                );
+            }
+
+            if (removedTaskLinks.length > 0) {
+                await Task.updateMany(
+                    { _id: { $in: removedTaskLinks } },
+                    { $pull: { links: { targetType: 'Bug', targetId: id } } }
                 );
             }
         }
@@ -150,10 +177,14 @@ export const deleteBug = async (req: Request, res: Response) => {
         const { id } = req.params;
         await Bug.findByIdAndDelete(id);
 
-        // Remove references from test cases
+        // Remove references from test cases and tasks
         await TestCase.updateMany(
             { linkedBugIds: id },
             { $pull: { linkedBugIds: id } }
+        );
+        await Task.updateMany(
+            { 'links.targetType': 'Bug', 'links.targetId': id },
+            { $pull: { links: { targetType: 'Bug', targetId: id } } }
         );
 
         res.json({ msg: 'Bug deleted' });

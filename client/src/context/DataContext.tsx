@@ -65,6 +65,7 @@ export interface TestCase {
     createdBy: string;
     friendlyId?: string;
     linkedBugIds?: string[];
+    linkedTaskIds?: string[];
 }
 
 export interface Bug {
@@ -80,10 +81,16 @@ export interface Bug {
     status: 'Draft' | 'Opened' | 'Fixed' | 'Closed';
     tags?: string[];
     linkedTestCaseIds?: string[];
+    linkedTaskIds?: string[];
     attachments: string[]; // URLs
     createdAt: string;
     createdBy: string;
     friendlyId?: string;
+}
+
+export interface TaskLink {
+    targetType: 'Task' | 'Bug' | 'TestCase';
+    targetId: string;
 }
 
 export interface Task {
@@ -96,6 +103,8 @@ export interface Task {
     tags?: string[];
     additionalInfo?: string;
     attachments?: string[];
+    parentId?: string;
+    links?: TaskLink[];
     createdBy: string;
     createdAt: string;
 }

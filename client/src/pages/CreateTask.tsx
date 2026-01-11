@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { ArrowLeft, Save, Upload, X } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X, ChevronLeft } from 'lucide-react';
 import TagInput from '../components/TagInput';
 import StatusDropdown from '../components/StatusDropdown';
 import api from '../lib/api';
@@ -9,9 +9,13 @@ import { usePermissions } from '../hooks/usePermissions';
 
 export default function CreateTask() {
     const navigate = useNavigate();
-    const { activeProjectId, addTask } = useData();
+    const location = useLocation();
+    const { activeProjectId, addTask, tasks } = useData();
     const { canCreateTasks } = usePermissions();
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const parentId = location.state?.parentId;
+    const parentTask = parentId ? tasks.find(t => t.id === parentId || (t as any)._id === parentId) : null;
 
     if (!canCreateTasks) {
         return (
@@ -83,8 +87,13 @@ export default function CreateTask() {
                 tags,
                 additionalInfo,
                 attachments,
+                parentId
             });
-            navigate('/tasks');
+            if (location.state?.returnTo) {
+                navigate(location.state.returnTo.pathname + location.state.returnTo.search);
+            } else {
+                navigate('/tasks');
+            }
         } catch (err) {
             console.error('Failed to create task:', err);
         } finally {
@@ -95,14 +104,24 @@ export default function CreateTask() {
     return (
         <div className="space-y-6 pb-20">
             {/* Header */}
-            <div className="flex items-center gap-4">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
-                >
-                    <ArrowLeft size={24} />
-                </button>
-                <h1 className="text-2xl font-bold">New Task</h1>
+            <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
+                    >
+                        <ArrowLeft size={24} />
+                    </button>
+                    <h1 className="text-2xl font-bold">{parentTask ? 'New Subtask' : 'New Task'}</h1>
+                </div>
+                {parentTask && (
+                    <div className="pl-10">
+                        <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <span className="opacity-50">Adding subtask to:</span>
+                            <span className="text-primary font-medium">{parentTask.title}</span>
+                        </p>
+                    </div>
+                )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">

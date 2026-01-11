@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { ArrowLeft, Edit, Link as LinkIcon, Bug as BugIcon, Trash2, X, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Edit, Link as LinkIcon, Bug as BugIcon, Trash2, X, PlayCircle, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
 import LinkSelector from '../components/LinkSelector';
@@ -11,6 +11,7 @@ import StatusDropdown from '../components/StatusDropdown';
 import { AnimatePresence } from 'framer-motion';
 import { formatListText } from '../lib/utils';
 import { getTestRuns } from '../lib/api';
+import LinkItemModal from '../components/LinkItemModal';
 
 interface TestRun {
     _id: string;
@@ -27,11 +28,12 @@ export default function TestCaseDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const { testCases, bugs, linkItems, unlinkItems, deleteTestCase, updateTestCaseStatus, activeProjectId } = useData();
+    const { testCases, bugs, tasks, linkItems, unlinkItems, deleteTestCase, updateTestCaseStatus, updateTestCase, activeProjectId } = useData();
     const { canEditTestCases } = usePermissions();
     const { user } = useAuth();
     const [showLinkSelector, setShowLinkSelector] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showLinkTaskModal, setShowLinkTaskModal] = useState(false);
     const [testRuns, setTestRuns] = useState<TestRun[]>([]);
 
     const testCase = testCases.find(t => t.id === id || (t as any)._id === id);
@@ -74,6 +76,11 @@ export default function TestCaseDetail() {
         return testCase.linkedBugIds?.some(linkedId =>
             String(linkedId) === String(bugId)
         );
+    });
+
+    const linkedTasks = tasks.filter(t => {
+        const taskId = (t as any)._id || t.id;
+        return testCase.linkedTaskIds?.some(linkedId => String(linkedId) === String(taskId));
     });
 
     const navigateToTest = (testId: string) => {
@@ -243,62 +250,119 @@ export default function TestCaseDetail() {
                     </div>
                 </div>
 
-                <div className="space-y-3 pt-4 border-t border-white/5">
-                    <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2">
-                            <BugIcon size={14} />
-                            Linked Bugs
-                        </h3>
-                        {canEditTestCases && (
-                            <Button variant="ghost" size="sm" onClick={() => setShowLinkSelector(true)} className="h-8 text-xs">
-                                <LinkIcon size={12} className="mr-1" /> Link Bug
-                            </Button>
+                <div className="space-y-6 pt-4 border-t border-white/5">
+                    {/* Linked Bugs */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2">
+                                <BugIcon size={14} />
+                                Linked Bugs
+                            </h3>
+                            {canEditTestCases && (
+                                <Button variant="ghost" size="sm" onClick={() => setShowLinkSelector(true)} className="h-8 text-xs">
+                                    <LinkIcon size={12} className="mr-1" /> Link Bug
+                                </Button>
+                            )}
+                        </div>
+
+                        {linkedBugs.length === 0 ? (
+                            <p className="text-sm text-muted-foreground italic">No linked bugs.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {linkedBugs.map(bug => {
+                                    const bugLinkId = (bug as any)._id || bug.id;
+                                    const testCaseId = (testCase as any)._id || testCase.id;
+                                    const canUnlinkBug = user?.role === 'QA' || bug.createdBy === user?.id;
+
+                                    return (
+                                        <div key={bugLinkId} className="relative group">
+                                            <Link to={`/bugs/${bugLinkId}`} className="block bg-white/5 hover:bg-white/10 p-3 rounded-lg border border-white/5 transition-colors">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="font-mono text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                                                        {bug.friendlyId || 'BUG'}
+                                                    </span>
+                                                    {canEditTestCases && canUnlinkBug && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                unlinkItems('test', testCaseId, 'bug', bugLinkId);
+                                                            }}
+                                                            className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full text-red-500 transition-all z-10"
+                                                            title="Unlink bug"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <p className="text-sm font-medium truncate">{bug.title}</p>
+                                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 ${bug.status === 'Fixed' || bug.status === 'Closed' ? 'border-green-500/30 text-green-500' : 'border-red-500/30 text-red-500'
+                                                        }`}>
+                                                        {bug.status}
+                                                    </span>
+                                                </div>
+                                            </Link>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         )}
                     </div>
 
-                    {linkedBugs.length === 0 ? (
-                        <p className="text-sm text-muted-foreground italic">No linked bugs.</p>
-                    ) : (
-                        <div className="space-y-2">
-                            {linkedBugs.map(bug => {
-                                const bugLinkId = (bug as any)._id || bug.id;
-                                const testCaseId = (testCase as any)._id || testCase.id;
-                                const canUnlinkBug = user?.role === 'QA' || bug.createdBy === user?.id;
-
-                                return (
-                                    <div key={bugLinkId} className="relative group">
-                                        <Link to={`/bugs/${bugLinkId}`} className="block bg-white/5 hover:bg-white/10 p-3 rounded-lg border border-white/5 transition-colors">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <span className="font-mono text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">
-                                                    {bug.friendlyId || 'BUG'}
-                                                </span>
-                                                {canEditTestCases && canUnlinkBug && (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            unlinkItems('test', testCaseId, 'bug', bugLinkId);
-                                                        }}
-                                                        className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full text-red-500 transition-all z-10"
-                                                        title="Unlink bug"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                )}
-                                            </div>
-                                            <div className="flex items-center justify-between gap-2">
-                                                <p className="text-sm font-medium truncate">{bug.title}</p>
-                                                <span className={`text-[10px] px-1.5 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 ${bug.status === 'Fixed' || bug.status === 'Closed' ? 'border-green-500/30 text-green-500' : 'border-red-500/30 text-red-500'
-                                                    }`}>
-                                                    {bug.status}
-                                                </span>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                );
-                            })}
+                    {/* Linked Tasks */}
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2">
+                                <LinkIcon size={14} />
+                                Linked Tasks
+                            </h3>
+                            {canEditTestCases && (
+                                <Button variant="ghost" size="sm" onClick={() => setShowLinkTaskModal(true)} className="h-8 text-xs">
+                                    <Plus size={12} className="mr-1" /> Link Task
+                                </Button>
+                            )}
                         </div>
-                    )}
+                        {linkedTasks.length === 0 ? (
+                            <p className="text-sm text-muted-foreground italic">No linked tasks.</p>
+                        ) : (
+                            <div className="space-y-2">
+                                {linkedTasks.map(task => {
+                                    const taskId = (task as any)._id || task.id;
+                                    const tcId = (testCase as any)._id || testCase.id;
+                                    return (
+                                        <div key={taskId} className="relative group">
+                                            <Link to={`/tasks/${taskId}`} className="block bg-white/5 hover:bg-white/10 p-3 rounded-lg border border-white/5 transition-colors">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`w-2 h-2 rounded-full ${task.priority === 'High' ? 'bg-orange-500' :
+                                                                task.priority === 'Medium' ? 'bg-blue-500' : 'bg-slate-500'
+                                                            }`} />
+                                                        <span className="text-xs font-semibold">{task.status}</span>
+                                                    </div>
+                                                    {canEditTestCases && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                const newLinks = (testCase.linkedTaskIds || []).filter(id => String(id) !== String(taskId));
+                                                                updateTestCase(tcId, { linkedTaskIds: newLinks });
+                                                            }}
+                                                            className="p-1 bg-red-500/20 hover:bg-red-500/30 rounded-full text-red-500 transition-all z-10"
+                                                            title="Unlink task"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm font-medium truncate">{task.title}</p>
+                                            </Link>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -353,6 +417,21 @@ export default function TestCaseDetail() {
                 )}
             </AnimatePresence>
 
+            <LinkItemModal
+                isOpen={showLinkTaskModal}
+                onClose={() => setShowLinkTaskModal(false)}
+                onLink={(targetType, targetId) => {
+                    if (targetType === 'Task') {
+                        const tcId = (testCase as any)._id || testCase.id;
+                        const newLinks = [...(testCase.linkedTaskIds || []), targetId];
+                        updateTestCase(tcId, { linkedTaskIds: newLinks });
+                    }
+                    setShowLinkTaskModal(false);
+                }}
+                excludeIds={testCase.linkedTaskIds}
+                projectId={testCase.projectId}
+            />
+
             <Modal
                 isOpen={showDeleteModal}
                 onClose={() => setShowDeleteModal(false)}
@@ -367,6 +446,6 @@ export default function TestCaseDetail() {
                 confirmText="Delete"
                 cancelText="Cancel"
             />
-        </div >
+        </div>
     );
 }

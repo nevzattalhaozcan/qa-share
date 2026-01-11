@@ -3,12 +3,15 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { ArrowLeft, Trash2, X, ChevronLeft, ChevronRight, FileText, Edit2 } from 'lucide-react';
+import { ArrowLeft, Trash2, X, ChevronLeft, ChevronRight, FileText, Edit2, Plus, ExternalLink, Link as LinkIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
 import StatusDropdown from '../components/StatusDropdown';
 import CommentSection from '../components/CommentSection';
 import { AnimatePresence, motion } from 'framer-motion';
+import LinkItemModal from '../components/LinkItemModal';
+import type { TaskLink } from '../context/DataContext';
 
 export default function TaskDetail() {
     const { id } = useParams();
@@ -19,6 +22,7 @@ export default function TaskDetail() {
     const { user } = useAuth();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [viewerAttachment, setViewerAttachment] = useState<{ url: string; type: 'image' | 'video' | 'file'; index: number } | null>(null);
+    const [showLinkModal, setShowLinkModal] = useState(false);
 
     const task = tasks.find(t => t.id === id || (t as any)._id === id);
 
@@ -188,9 +192,120 @@ export default function TaskDetail() {
                     </div>
                 )}
 
+                {task.parentId && (
+                    <div className="mb-2">
+                        <Link
+                            to={`/tasks/${task.parentId}`}
+                            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
+                        >
+                            <ChevronLeft size={12} />
+                            Parent: {tasks.find(t => t.id === task.parentId || (t as any)._id === task.parentId)?.title || 'Parent Task'}
+                        </Link>
+                    </div>
+                )}
                 <div className="space-y-3">
                     <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Description</h3>
                     <p className="text-base leading-relaxed whitespace-pre-wrap">{task.description || 'No description provided.'}</p>
+                </div>
+
+                {/* Subtasks Section */}
+                <div className="space-y-3 pt-6 border-t border-white/5">
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Subtasks</h3>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-primary hover:text-primary hover:bg-primary/10 h-8 gap-1"
+                            onClick={() => navigate('/tasks/create', {
+                                state: {
+                                    parentId: (task as any)._id || task.id,
+                                    returnTo: location
+                                }
+                            })}
+                        >
+                            <Plus size={16} />
+                            Add Subtask
+                        </Button>
+                    </div>
+
+                    {tasks.filter(t => t.parentId === ((task as any)._id || task.id)).length > 0 ? (
+                        <div className="space-y-2">
+                            {tasks.filter(t => t.parentId === ((task as any)._id || task.id)).map(subtask => {
+                                const subtaskId = (subtask as any)._id || subtask.id;
+                                return (
+                                    <Link
+                                        key={subtaskId}
+                                        to={`/tasks/${subtaskId}`}
+                                        className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-2 h-2 rounded-full ${subtask.status === 'Done' ? 'bg-green-500' :
+                                                subtask.status === 'In Progress' ? 'bg-blue-500' :
+                                                    'bg-slate-500'
+                                                }`} />
+                                            <span className="font-medium text-sm group-hover:text-primary transition-colors">{subtask.title}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase ${subtask.priority === 'High' ? 'bg-red-500/20 text-red-400' :
+                                                subtask.priority === 'Medium' ? 'bg-blue-500/20 text-blue-400' :
+                                                    'bg-slate-500/20 text-slate-400'
+                                                }`}>
+                                                {subtask.priority[0]}
+                                            </span>
+                                            <StatusDropdown
+                                                currentStatus={subtask.status}
+                                                options={['To Do', 'In Progress', 'Done']}
+                                                onUpdate={(status) => updateTask(subtaskId, { status: status as any })}
+                                                colorMap={{
+                                                    'To Do': 'bg-slate-500/10 text-slate-400',
+                                                    'In Progress': 'bg-blue-500/10 text-blue-500',
+                                                    'Done': 'bg-green-500/10 text-green-500'
+                                                }}
+                                                disabled={!canEdit}
+                                            />
+                                        </div>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground italic">No subtasks yet.</p>
+                    )}
+                </div>
+
+                {/* Linked Items Section */}
+                <div className="space-y-3 pt-6 border-t border-white/5">
+                    <div className="flex items-center justify-between">
+                        <h3 className="font-semibold text-sm uppercase tracking-wide text-slate-400">Linked Items</h3>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-primary hover:text-primary hover:bg-primary/10 h-8 gap-1"
+                            onClick={() => setShowLinkModal(true)}
+                        >
+                            <Plus size={16} />
+                            Link Item
+                        </Button>
+                    </div>
+
+                    {task.links && task.links.length > 0 ? (
+                        <div className="space-y-2">
+                            {task.links.map((link, idx) => (
+                                <LinkedItemRow
+                                    key={`${link.targetType}-${link.targetId}-${idx}`}
+                                    link={link}
+                                    onUnlink={() => {
+                                        const taskId = (task as any)._id || task.id;
+                                        const newLinks = task.links?.filter((_, i) => i !== idx);
+                                        updateTask(taskId, { links: newLinks });
+                                    }}
+                                    canUnlink={canEdit}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-muted-foreground italic">No linked items yet.</p>
+                    )}
                 </div>
 
                 {task.additionalInfo && (
@@ -400,6 +515,77 @@ export default function TaskDetail() {
                     </motion.div>
                 )}
             </AnimatePresence>
+            {/* Link Item Modal */}
+            <LinkItemModal
+                isOpen={showLinkModal}
+                onClose={() => setShowLinkModal(false)}
+                onLink={(targetType: 'Task' | 'Bug' | 'TestCase', targetId: string) => {
+                    const taskId = (task as any)._id || task.id;
+                    const newLinks = [...(task.links || []), { targetType, targetId }];
+                    updateTask(taskId, { links: newLinks });
+                    setShowLinkModal(false);
+                }}
+                excludeIds={[(task as any)._id || task.id]}
+                projectId={task.projectId}
+            />
+        </div>
+    );
+}
+
+function LinkedItemRow({ link, onUnlink, canUnlink }: { link: TaskLink; onUnlink: () => void; canUnlink: boolean }) {
+    const { tasks, bugs, testCases } = useData();
+    const navigate = useNavigate();
+
+    let title = '';
+    let status = '';
+    let path = '';
+    let icon = <LinkIcon size={14} />;
+
+    if (link.targetType === 'Task') {
+        const t = tasks.find(it => it.id === link.targetId || (it as any)._id === link.targetId);
+        title = t?.title || 'Unknown Task';
+        status = t?.status || '';
+        path = `/tasks/${link.targetId}`;
+    } else if (link.targetType === 'Bug') {
+        const b = bugs.find(it => it.id === link.targetId || (it as any)._id === link.targetId);
+        title = b?.title || 'Unknown Bug';
+        status = b?.status || '';
+        path = `/bugs/${link.targetId}`;
+    } else if (link.targetType === 'TestCase') {
+        const tc = testCases.find(it => it.id === link.targetId || (it as any)._id === link.targetId);
+        title = tc?.title || 'Unknown Test Case';
+        status = tc?.status || '';
+        path = `/tests/${link.targetId}`;
+    }
+
+    return (
+        <div className="flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-colors group">
+            <div
+                className="flex items-center gap-3 cursor-pointer flex-1"
+                onClick={() => navigate(path)}
+            >
+                <div className="text-primary">{icon}</div>
+                <div className="flex flex-col">
+                    <span className="text-xs text-slate-500 font-mono uppercase tracking-wider">{link.targetType}</span>
+                    <span className="font-medium text-sm group-hover:text-primary transition-colors">{title}</span>
+                </div>
+            </div>
+            <div className="flex items-center gap-2">
+                <span className="text-[10px] px-2 py-0.5 bg-white/5 rounded text-slate-400">{status}</span>
+                {canUnlink && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onUnlink();
+                        }}
+                        className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors text-red-500 opacity-0 group-hover:opacity-100"
+                        title="Unlink item"
+                    >
+                        <X size={14} />
+                    </button>
+                )}
+                <ExternalLink size={14} className="text-slate-500" />
+            </div>
         </div>
     );
 }

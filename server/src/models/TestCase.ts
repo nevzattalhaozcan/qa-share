@@ -5,15 +5,15 @@ const testCaseSchema = new mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String },
     preconditions: { type: String },
-    steps: { 
-        type: String, 
-        required: function(this: any) {
+    steps: {
+        type: String,
+        required: function (this: any) {
             return this.status !== 'Draft';
         }
     },
-    expectedResult: { 
-        type: String, 
-        required: function(this: any) {
+    expectedResult: {
+        type: String,
+        required: function (this: any) {
             return this.status !== 'Draft';
         }
     },
@@ -22,6 +22,7 @@ const testCaseSchema = new mongoose.Schema({
     tags: [{ type: String }],
     friendlyId: { type: String },
     linkedBugIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bug' }],
+    linkedTaskIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Task' }],
     createdBy: { type: String }, // Storing ID or Name
     createdAt: { type: Date, default: Date.now },
 });
