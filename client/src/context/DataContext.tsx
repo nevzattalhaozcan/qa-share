@@ -23,6 +23,22 @@ export interface ProjectPermissions {
     devCanEditTasks: boolean;
 }
 
+export interface TaskBoardColumn {
+    id: string;
+    title: string;
+    status: string;
+}
+
+export interface TaskBoardSettings {
+    columns: TaskBoardColumn[];
+    visibleFields: {
+        priority: boolean;
+        tags: boolean;
+        assignee: boolean;
+        dueDate: boolean;
+    };
+}
+
 export interface Project {
     id: string;
     name: string;
@@ -30,6 +46,7 @@ export interface Project {
     createdBy: string; // User ID
     members: TeamMember[];
     permissions: ProjectPermissions;
+    taskBoardSettings?: TaskBoardSettings;
     createdAt: string;
 }
 
@@ -153,6 +170,7 @@ interface DataContextType {
     clearAllNotifications: () => void;
     addComment: (comment: Omit<Comment, 'id' | 'createdAt' | 'resolved'>) => void;
     markCommentAsResolved: (id: string) => void;
+    updateBoardSettings: (projectId: string, settings: TaskBoardSettings) => void;
     refetchData: () => void;
 }
 
@@ -532,6 +550,15 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const updateBoardSettings = async (projectId: string, settings: TaskBoardSettings) => {
+        try {
+            const res = await api.put(`/projects/${projectId}/board-settings`, { settings });
+            setProjects(projects.map(p => (p.id === projectId || (p as any)._id === projectId) ? res.data : p));
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
     const deleteTask = async (id: string) => {
         try {
             await api.delete(`/tasks/${id}`);
@@ -592,6 +619,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
             addNote,
             updateNote,
             deleteNote,
+            updateBoardSettings,
             addNotification,
             markNotificationAsRead,
             clearAllNotifications,

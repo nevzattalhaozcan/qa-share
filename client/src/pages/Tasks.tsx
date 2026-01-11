@@ -1,5 +1,5 @@
 import { useData } from '../context/DataContext';
-import { Plus, Filter, ArrowUpDown, CheckSquare } from 'lucide-react';
+import { Plus, Filter, ArrowUpDown, CheckSquare, LayoutList, Trello } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { PageLoadingSkeleton } from '../components/ui/Skeleton';
@@ -8,13 +8,15 @@ import { useUrlFilters } from '../hooks/useUrlFilters';
 import { useScrollPosition } from '../hooks/useScrollPosition';
 import StatusDropdown from '../components/StatusDropdown';
 import { usePermissions } from '../hooks/usePermissions';
+import TaskBoard from '../components/TaskBoard';
 
 export default function Tasks() {
-    const { tasks, activeProjectId, isLoading, updateTask } = useData();
+    const { tasks, projects, activeProjectId, isLoading, updateTask } = useData();
     const { canCreateTasks, canEditTasks } = usePermissions();
     const location = useLocation();
     const [showFilters, setShowFilters] = useState(false);
     const [showSortMenu, setShowSortMenu] = useState(false);
+    const [view, setView] = useState<'list' | 'board'>('list');
 
     // Persist filters to URL
     const { filters, toggleFilter, updateFilter } = useUrlFilters({
@@ -27,6 +29,7 @@ export default function Tasks() {
     useScrollPosition('tasks-scroll', isLoading);
 
     const projectTasks = tasks.filter(t => String(t.projectId) === String(activeProjectId));
+    const project = projects.find(p => String(p.id) === String(activeProjectId) || String((p as any)._id) === String(activeProjectId));
 
     const statusPriority = {
         'To Do': 0,
@@ -140,61 +143,81 @@ export default function Tasks() {
     return (
         <div className="space-y-6 pb-20">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Tasks</h1>
-                <div className="flex items-center gap-2">
-                    {/* Sort Dropdown */}
-                    <div className="relative">
+                <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-bold">Tasks</h1>
+                    <div className="flex bg-white/5 p-1 rounded-xl">
                         <button
-                            onClick={() => setShowSortMenu(!showSortMenu)}
-                            className={`p-2 rounded-full transition-colors ${filters.sort !== 'newest'
-                                ? 'bg-primary/20 text-primary'
-                                : 'bg-primary/10 text-primary hover:bg-primary/20'
-                                }`}
-                            title="Sort"
+                            onClick={() => setView('list')}
+                            className={`p-1.5 rounded-lg transition-all ${view === 'list' ? 'bg-primary/20 text-primary shadow-lg shadow-primary/10' : 'text-muted-foreground hover:text-white'}`}
+                            title="List View"
                         >
-                            <ArrowUpDown size={24} />
+                            <LayoutList size={20} />
                         </button>
-
-                        <AnimatePresence>
-                            {showSortMenu && (
-                                <>
-                                    <div
-                                        className="fixed inset-0 z-40"
-                                        onClick={() => setShowSortMenu(false)}
-                                    />
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                        className="absolute right-0 top-full mt-2 w-40 glass-card rounded-xl border border-white/10 shadow-xl z-50 overflow-hidden"
-                                    >
-                                        <div className="p-1 space-y-0.5">
-                                            {[
-                                                { label: 'Newest First', value: 'newest' },
-                                                { label: 'Oldest First', value: 'oldest' },
-                                                { label: 'By Status', value: 'status' },
-                                                { label: 'By Priority', value: 'priority' },
-                                            ].map((option) => (
-                                                <button
-                                                    key={option.value}
-                                                    onClick={() => {
-                                                        updateFilter('sort', option.value);
-                                                        setShowSortMenu(false);
-                                                    }}
-                                                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${filters.sort === option.value
-                                                        ? 'bg-primary/20 text-primary font-medium'
-                                                        : 'text-muted-foreground hover:bg-white/5 hover:text-white'
-                                                        }`}
-                                                >
-                                                    {option.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </motion.div>
-                                </>
-                            )}
-                        </AnimatePresence>
+                        <button
+                            onClick={() => setView('board')}
+                            className={`p-1.5 rounded-lg transition-all ${view === 'board' ? 'bg-primary/20 text-primary shadow-lg shadow-primary/10' : 'text-muted-foreground hover:text-white'}`}
+                            title="Board View"
+                        >
+                            <Trello size={20} />
+                        </button>
                     </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    {/* Sort Dropdown - only show in list view */}
+                    {view === 'list' && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowSortMenu(!showSortMenu)}
+                                className={`p-2 rounded-full transition-colors ${filters.sort !== 'newest'
+                                    ? 'bg-primary/20 text-primary'
+                                    : 'bg-primary/10 text-primary hover:bg-primary/20'
+                                    }`}
+                                title="Sort"
+                            >
+                                <ArrowUpDown size={24} />
+                            </button>
+
+                            <AnimatePresence>
+                                {showSortMenu && (
+                                    <>
+                                        <div
+                                            className="fixed inset-0 z-40"
+                                            onClick={() => setShowSortMenu(false)}
+                                        />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                            className="absolute right-0 top-full mt-2 w-40 glass-card rounded-xl border border-white/10 shadow-xl z-50 overflow-hidden"
+                                        >
+                                            <div className="p-1 space-y-0.5">
+                                                {[
+                                                    { label: 'Newest First', value: 'newest' },
+                                                    { label: 'Oldest First', value: 'oldest' },
+                                                    { label: 'By Status', value: 'status' },
+                                                    { label: 'By Priority', value: 'priority' },
+                                                ].map((option) => (
+                                                    <button
+                                                        key={option.value}
+                                                        onClick={() => {
+                                                            updateFilter('sort', option.value);
+                                                            setShowSortMenu(false);
+                                                        }}
+                                                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${filters.sort === option.value
+                                                            ? 'bg-primary/20 text-primary font-medium'
+                                                            : 'text-muted-foreground hover:bg-white/5 hover:text-white'
+                                                            }`}
+                                                    >
+                                                        {option.label}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
 
                     <button
                         onClick={() => setShowFilters(!showFilters)}
@@ -239,19 +262,43 @@ export default function Tasks() {
                 </div>
             )}
 
-            {/* Tasks List */}
-            <div className="space-y-4">
-                {filteredTasks.length === 0 ? (
-                    <div className="text-center py-12 text-muted-foreground flex flex-col items-center gap-4">
-                        <div className="p-4 rounded-full bg-slate-800/50">
-                            <CheckSquare size={48} className="text-slate-600" />
-                        </div>
-                        <p>No tasks {filters.status.length > 0 || filters.tags.length > 0 ? 'match the filters' : 'created yet'}.</p>
-                    </div>
+            {/* View Content */}
+            <AnimatePresence mode="wait">
+                {view === 'list' ? (
+                    <motion.div
+                        key="list"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="space-y-4"
+                    >
+                        {filteredTasks.length === 0 ? (
+                            <div className="text-center py-12 text-muted-foreground flex flex-col items-center gap-4">
+                                <div className="p-4 rounded-full bg-slate-800/50">
+                                    <CheckSquare size={48} className="text-slate-600" />
+                                </div>
+                                <p>No tasks {filters.status.length > 0 || filters.tags.length > 0 ? 'match the filters' : 'created yet'}.</p>
+                            </div>
+                        ) : (
+                            filteredTasks.map(renderTaskCard)
+                        )}
+                    </motion.div>
                 ) : (
-                    filteredTasks.map(renderTaskCard)
+                    <motion.div
+                        key="board"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                    >
+                        {project && (
+                            <TaskBoard
+                                project={project}
+                                tasks={filteredTasks}
+                            />
+                        )}
+                    </motion.div>
                 )}
-            </div>
+            </AnimatePresence>
         </div>
     );
 }

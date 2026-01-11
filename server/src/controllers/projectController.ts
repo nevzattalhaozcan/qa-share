@@ -96,7 +96,7 @@ export const addTeamMember = async (req: Request, res: Response) => {
             // Create new user
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(member.password, salt);
-            
+
             user = new User({
                 name: member.name,
                 username: member.username,
@@ -136,7 +136,7 @@ export const addTeamMember = async (req: Request, res: Response) => {
             role: member.role
         });
         await project.save();
-        
+
         // Return project with isExistingUser flag
         res.json({ project, isExistingUser });
     } catch (err) {
@@ -195,6 +195,21 @@ export const deleteProject = async (req: Request, res: Response) => {
 
         await Project.findByIdAndDelete(id);
         res.json({ msg: 'Project deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+};
+export const updateBoardSettings = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { settings } = req.body;
+        const project = await Project.findByIdAndUpdate(
+            id,
+            { taskBoardSettings: settings },
+            { new: true }
+        );
+        res.json(project);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

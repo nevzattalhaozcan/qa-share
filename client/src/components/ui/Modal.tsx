@@ -6,12 +6,14 @@ interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
     title: string;
-    message: string;
+    message?: string;
     type?: 'error' | 'warning' | 'confirm' | 'info';
     onConfirm?: () => void;
     onCancel?: () => void;
     confirmText?: string;
     cancelText?: string;
+    children?: React.ReactNode;
+    className?: string;
 }
 
 export function Modal({
@@ -23,7 +25,9 @@ export function Modal({
     onConfirm,
     onCancel,
     confirmText = 'OK',
-    cancelText = 'Cancel'
+    cancelText = 'Cancel',
+    children,
+    className = ''
 }: ModalProps) {
     useEffect(() => {
         if (isOpen) {
@@ -66,13 +70,13 @@ export function Modal({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
             {/* Backdrop */}
-            <div 
+            <div
                 className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 onClick={onClose}
             />
-            
+
             {/* Modal */}
-            <div className="relative glass-card rounded-2xl p-6 max-w-md w-full mx-4 animate-in fade-in zoom-in duration-200">
+            <div className={`relative glass-card rounded-2xl p-6 w-full mx-4 animate-in fade-in zoom-in duration-200 ${className || 'max-w-md'}`}>
                 {/* Close button */}
                 <button
                     onClick={onClose}
@@ -86,37 +90,44 @@ export function Modal({
                     <h2 className={`text-xl font-bold ${colorClasses[type]}`}>
                         {title}
                     </h2>
-                    <p className="text-muted-foreground">
-                        {message}
-                    </p>
 
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-2">
-                        {isConfirm ? (
-                            <>
-                                <Button 
-                                    variant="outline" 
-                                    className="flex-1"
-                                    onClick={handleCancel}
-                                >
-                                    {cancelText}
-                                </Button>
-                                <Button 
-                                    className={`flex-1 ${isDangerous ? 'bg-red-500 hover:bg-red-600' : ''}`}
-                                    onClick={handleConfirm}
-                                >
-                                    {confirmText}
-                                </Button>
-                            </>
-                        ) : (
-                            <Button 
-                                className="w-full"
-                                onClick={onClose}
-                            >
-                                {confirmText}
-                            </Button>
-                        )}
-                    </div>
+                    {children ? (
+                        <div className="pt-2">{children}</div>
+                    ) : (
+                        <>
+                            <p className="text-muted-foreground">
+                                {message}
+                            </p>
+
+                            {/* Actions */}
+                            <div className="flex gap-3 pt-2">
+                                {isConfirm ? (
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            className="flex-1"
+                                            onClick={handleCancel}
+                                        >
+                                            {cancelText}
+                                        </Button>
+                                        <Button
+                                            className={`flex-1 ${isDangerous ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                                            onClick={handleConfirm}
+                                        >
+                                            {confirmText}
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <Button
+                                        className="w-full"
+                                        onClick={onClose}
+                                    >
+                                        {confirmText}
+                                    </Button>
+                                )}
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

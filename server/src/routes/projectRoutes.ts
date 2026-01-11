@@ -6,7 +6,8 @@ import {
     addTeamMember,
     removeTeamMember,
     updatePermissions,
-    deleteProject
+    deleteProject,
+    updateBoardSettings
 } from '../controllers/projectController';
 import { auth } from '../middleware/auth';
 
@@ -19,5 +20,6 @@ router.delete('/:id', auth, deleteProject);
 router.post('/:id/members', auth, addTeamMember);
 router.delete('/:id/members/:memberId', auth, removeTeamMember);
 router.put('/:id/permissions', auth, updatePermissions);
+router.put('/:id/board-settings', auth, updateBoardSettings);
 
 export default router;

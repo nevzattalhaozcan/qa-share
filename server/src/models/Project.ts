@@ -22,12 +22,42 @@ const projectPermissionsSchema = new mongoose.Schema({
     devCanEditTasks: { type: Boolean, default: false },
 });
 
+const taskBoardSettingsSchema = new mongoose.Schema({
+    columns: [{
+        id: { type: String, required: true },
+        title: { type: String, required: true },
+        status: { type: String, required: true },
+    }],
+    visibleFields: {
+        priority: { type: Boolean, default: true },
+        tags: { type: Boolean, default: true },
+        assignee: { type: Boolean, default: true },
+        dueDate: { type: Boolean, default: true },
+    }
+}, { _id: false });
+
 const projectSchema = new mongoose.Schema({
     name: { type: String, required: true },
     description: { type: String },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     members: [teamMemberSchema],
     permissions: { type: projectPermissionsSchema, default: () => ({}) },
+    taskBoardSettings: {
+        type: taskBoardSettingsSchema,
+        default: () => ({
+            columns: [
+                { id: 'todo', title: 'To Do', status: 'To Do' },
+                { id: 'doing', title: 'Doing', status: 'In Progress' },
+                { id: 'done', title: 'Done', status: 'Done' },
+            ],
+            visibleFields: {
+                priority: true,
+                tags: true,
+                assignee: true,
+                dueDate: true,
+            }
+        })
+    },
     createdAt: { type: Date, default: Date.now },
 });
 
