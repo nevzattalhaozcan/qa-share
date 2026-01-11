@@ -64,9 +64,9 @@ export default function TaskBoard({ project, tasks }: TaskBoardProps) {
         }
 
         // Standard task move
-        const parts = destination.droppableId.split(':');
-        const targetStatus = parts.pop();
-        const targetParentId = parts.length > 0 ? parts[0] : null;
+        const lastColonIndex = destination.droppableId.lastIndexOf(':');
+        const targetParentId = destination.droppableId.substring(0, lastColonIndex);
+        const targetStatus = destination.droppableId.substring(lastColonIndex + 1);
 
         if (targetStatus) {
             const updates: any = {
