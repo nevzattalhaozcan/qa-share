@@ -17,7 +17,7 @@ export default function TaskDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
-    const { tasks, updateTask, deleteTask } = useData();
+    const { tasks, updateTask, deleteTask, projects } = useData();
     const { canEditTasks, canCreateTasks } = usePermissions();
     const { user } = useAuth();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -107,6 +107,11 @@ export default function TaskDetail() {
         updateTask(taskId, { priority: newPriority });
     };
 
+    const project = projects.find(p => (p as any)._id === task.projectId || p.id === task.projectId);
+    const assigneeName = task.assignedTo ? project?.members.find(m => m.id === task.assignedTo)?.name : 'Unassigned';
+    // Reporter is stored as ID (from req.user.id)
+    const reporterName = task.reporter ? project?.members.find(m => m.id === task.reporter)?.name : (task as any).createdBy ? project?.members.find(m => m.id === (task as any).createdBy)?.name : 'Unknown';
+
     return (
         <div className="space-y-4 pb-20">
             {/* Header */}
@@ -145,9 +150,31 @@ export default function TaskDetail() {
                     </div>
                 </div>
 
-                {/* Middle - Title */}
-                <div className="space-y-2 mb-4">
+                {/* Middle - Title & Meta */}
+                <div className="space-y-4 mb-6">
                     <h1 className="text-2xl font-bold break-words leading-tight">{task.title}</h1>
+
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground bg-white/5 p-3 rounded-xl border border-white/5">
+                        <div className="flex items-center gap-2">
+                            <span className="opacity-50 uppercase tracking-wider text-xs font-bold">Bot:</span>
+                            <span className="text-white font-medium">AntiGravity</span>
+                        </div>
+                        <div className="w-px h-3 bg-white/10" />
+                        <div className="flex items-center gap-2">
+                            <span className="opacity-50 uppercase tracking-wider text-xs font-bold">Reporter:</span>
+                            <span className="text-white font-medium">{reporterName}</span>
+                        </div>
+                        <div className="w-px h-3 bg-white/10" />
+                        <div className="flex items-center gap-2">
+                            <span className="opacity-50 uppercase tracking-wider text-xs font-bold">Assignee:</span>
+                            <span className="text-white font-medium">{assigneeName}</span>
+                        </div>
+                        <div className="w-px h-3 bg-white/10" />
+                        <div className="flex items-center gap-2">
+                            <span className="opacity-50 uppercase tracking-wider text-xs font-bold">Created:</span>
+                            <span className="text-white font-medium">{new Date(task.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Bottom Row - Priority and Status */}

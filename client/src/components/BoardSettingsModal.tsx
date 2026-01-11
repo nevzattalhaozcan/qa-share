@@ -23,6 +23,7 @@ export default function BoardSettingsModal({ project, onClose }: BoardSettingsMo
             tags: true,
             assignee: true,
             dueDate: true,
+            reporter: true,
         }
     });
 
@@ -135,6 +136,24 @@ export default function BoardSettingsModal({ project, onClose }: BoardSettingsMo
                                 type="checkbox"
                                 checked={settings.visibleFields.tags}
                                 onChange={() => toggleField('tags')}
+                                className="rounded border-white/10 bg-white/5 text-primary focus:ring-primary"
+                            />
+                        </label>
+                        <label className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                            <span className="text-sm font-medium">Show Assignee</span>
+                            <input
+                                type="checkbox"
+                                checked={settings.visibleFields.assignee}
+                                onChange={() => toggleField('assignee')}
+                                className="rounded border-white/10 bg-white/5 text-primary focus:ring-primary"
+                            />
+                        </label>
+                        <label className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-colors">
+                            <span className="text-sm font-medium">Show Reporter</span>
+                            <input
+                                type="checkbox"
+                                checked={settings.visibleFields.reporter}
+                                onChange={() => toggleField('reporter')}
                                 className="rounded border-white/10 bg-white/5 text-primary focus:ring-primary"
                             />
                         </label>

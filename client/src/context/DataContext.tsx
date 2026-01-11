@@ -36,6 +36,7 @@ export interface TaskBoardSettings {
         tags: boolean;
         assignee: boolean;
         dueDate: boolean;
+        reporter: boolean;
     };
 }
 

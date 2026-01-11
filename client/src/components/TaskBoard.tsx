@@ -26,6 +26,7 @@ export default function TaskBoard({ project, tasks }: TaskBoardProps) {
             tags: true,
             assignee: true,
             dueDate: true,
+            reporter: true,
         }
     };
 

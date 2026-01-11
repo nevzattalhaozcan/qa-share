@@ -16,10 +16,12 @@ export default function TaskCard({ task, index, settings }: TaskCardProps) {
     const taskId = (task as any)._id || task.id;
     const project = projects.find(p => (p as any)._id === task.projectId || p.id === task.projectId);
     const assignee = task.assignedTo ? project?.members.find(m => m.id === task.assignedTo)?.name : null;
+    const reporter = task.reporter ? project?.members.find(m => m.id === task.reporter)?.name : (task as any).createdBy ? project?.members.find(m => m.id === (task as any).createdBy)?.name : null;
 
     const showPriority = settings?.visibleFields.priority !== false;
     const showTags = settings?.visibleFields.tags !== false;
     const showAssignee = settings?.visibleFields.assignee !== false;
+    const showReporter = settings?.visibleFields.reporter !== false;
 
     const subtasks = tasks.filter(t => t.parentId === taskId);
     const parentTask = task.parentId ? tasks.find(t => (t as any)._id === task.parentId || t.id === task.parentId) : null;
@@ -76,6 +78,11 @@ export default function TaskCard({ task, index, settings }: TaskCardProps) {
                                     {showAssignee && assignee && (
                                         <span className="text-primary truncate max-w-[80px]" title={`Assigned to ${assignee}`}>
                                             • {assignee.split(' ')[0]}
+                                        </span>
+                                    )}
+                                    {showReporter && reporter && (
+                                        <span className="text-muted-foreground truncate max-w-[80px]" title={`Reporter: ${reporter}`}>
+                                            • R: {reporter.split(' ')[0]}
                                         </span>
                                     )}
                                 </span>
