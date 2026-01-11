@@ -155,11 +155,7 @@ export default function TaskDetail() {
                     <h1 className="text-2xl font-bold break-words leading-tight">{task.title}</h1>
 
                     <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground bg-white/5 p-3 rounded-xl border border-white/5">
-                        <div className="flex items-center gap-2">
-                            <span className="opacity-50 uppercase tracking-wider text-xs font-bold">Bot:</span>
-                            <span className="text-white font-medium">AntiGravity</span>
-                        </div>
-                        <div className="w-px h-3 bg-white/10" />
+
                         <div className="flex items-center gap-2">
                             <span className="opacity-50 uppercase tracking-wider text-xs font-bold">Reporter:</span>
                             <span className="text-white font-medium">{reporterName}</span>
