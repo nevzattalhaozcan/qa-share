@@ -105,7 +105,7 @@ export default function Tasks() {
                             {task.priority}
                         </span>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{task.description}</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-5 mb-2">{task.description}</p>
                     {task.tags && task.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                             {task.tags.map(tag => (

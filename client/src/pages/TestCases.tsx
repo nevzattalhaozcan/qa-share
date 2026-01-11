@@ -418,7 +418,7 @@ export default function TestCases() {
                                                 {test.priority}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{test.description}</p>
+                                        <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-5 mb-2">{test.description}</p>
                                         {test.tags && test.tags.length > 0 && (
                                             <div className="flex flex-wrap gap-1 mb-2">
                                                 {test.tags.map(tag => (
@@ -448,7 +448,7 @@ export default function TestCases() {
                                                 {test.priority}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{test.description}</p>
+                                        <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-5 mb-2">{test.description}</p>
                                         {test.tags && test.tags.length > 0 && (
                                             <div className="flex flex-wrap gap-1 mb-2">
                                                 {test.tags.map(tag => (

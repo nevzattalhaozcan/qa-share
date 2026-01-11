@@ -114,7 +114,7 @@ export default function Bugs() {
                             {bug.severity}
                         </span>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{bug.description}</p>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap line-clamp-5 mb-2">{bug.description}</p>
                     {bug.tags && bug.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
                             {bug.tags.map(tag => (
