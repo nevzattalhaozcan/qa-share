@@ -63,6 +63,15 @@ export const updateTask = async (req: Request, res: Response) => {
             return res.status(404).json({ msg: 'Task not found' });
         }
 
+        task.title = title || task.title;
+        task.description = description || task.description;
+        task.status = status || task.status;
+        task.priority = priority || task.priority;
+        task.tags = tags || task.tags;
+        task.additionalInfo = additionalInfo || task.additionalInfo;
+        task.attachments = attachments || task.attachments;
+        task.parentId = parentId !== undefined ? parentId : task.parentId;
+
         if (links) {
             const oldLinks = task.links || [];
             const newLinks = links;
