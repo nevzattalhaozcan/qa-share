@@ -108,9 +108,16 @@ export default function TaskDetail() {
     };
 
     const project = projects.find(p => (p as any)._id === task.projectId || p.id === task.projectId);
-    const assigneeName = task.assignedTo ? project?.members.find(m => m.id === task.assignedTo)?.name : 'Unassigned';
+
+    const resolveUserName = (userId: string | undefined) => {
+        if (!userId) return 'Unassigned';
+        const member = project?.members.find(m => m.id === userId || (m as any)._id === userId);
+        return member ? member.name : userId; // Fallback to ID if name not found
+    };
+
+    const assigneeName = task.assignedTo ? resolveUserName(task.assignedTo) : 'Unassigned';
     // Reporter is stored as ID (from req.user.id)
-    const reporterName = task.reporter ? project?.members.find(m => m.id === task.reporter)?.name : (task as any).createdBy ? project?.members.find(m => m.id === (task as any).createdBy)?.name : 'Unknown';
+    const reporterName = task.reporter ? resolveUserName(task.reporter) : (task as any).createdBy ? resolveUserName((task as any).createdBy) : 'Unknown';
 
     return (
         <div className="space-y-4 pb-20">

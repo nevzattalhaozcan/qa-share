@@ -15,8 +15,15 @@ export default function TaskCard({ task, index, settings }: TaskCardProps) {
     const { tasks, projects } = useData();
     const taskId = (task as any)._id || task.id;
     const project = projects.find(p => (p as any)._id === task.projectId || p.id === task.projectId);
-    const assignee = task.assignedTo ? project?.members.find(m => m.id === task.assignedTo)?.name : null;
-    const reporter = task.reporter ? project?.members.find(m => m.id === task.reporter)?.name : (task as any).createdBy ? project?.members.find(m => m.id === (task as any).createdBy)?.name : null;
+
+    const resolveUserName = (userId: string | undefined) => {
+        if (!userId) return null;
+        const member = project?.members.find(m => m.id === userId || (m as any)._id === userId);
+        return member ? member.name : userId;
+    };
+
+    const assignee = resolveUserName(task.assignedTo);
+    const reporter = task.reporter ? resolveUserName(task.reporter) : (task as any).createdBy ? resolveUserName((task as any).createdBy) : null;
 
     const showPriority = settings?.visibleFields.priority !== false;
     const showTags = settings?.visibleFields.tags !== false;
