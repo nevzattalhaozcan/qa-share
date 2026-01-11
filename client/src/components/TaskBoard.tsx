@@ -103,7 +103,7 @@ export default function TaskBoard({ project, tasks }: TaskBoardProps) {
                         {/* Headers row */}
                         <div className="flex gap-6 sticky top-0 z-20 bg-slate-950/80 backdrop-blur-sm py-3 border-b border-white/5">
                             {settings.columns.map(column => (
-                                <div key={column.id} className="w-80 min-w-80 px-4">
+                                <div key={column.id} className="w-72 min-w-72 px-4">
                                     <h3 className="font-semibold text-xs text-slate-500 uppercase tracking-widest">{column.title}</h3>
                                 </div>
                             ))}
