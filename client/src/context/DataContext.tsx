@@ -98,7 +98,7 @@ export interface Task {
     projectId: string;
     title: string;
     description: string;
-    status: 'To Do' | 'In Progress' | 'Done';
+    status: 'To Do' | 'In Progress' | 'Done' | 'Backlog' | 'Archived';
     priority: 'Low' | 'Medium' | 'High';
     tags?: string[];
     additionalInfo?: string;

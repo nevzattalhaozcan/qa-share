@@ -17,6 +17,7 @@ export default function Tasks() {
     const [showFilters, setShowFilters] = useState(false);
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [view, setView] = useState<'list' | 'board'>('list');
+    const [showArchived, setShowArchived] = useState(false);
 
     // Persist filters to URL
     const { filters, toggleFilter, updateFilter } = useUrlFilters({
@@ -32,9 +33,11 @@ export default function Tasks() {
     const project = projects.find(p => String(p.id) === String(activeProjectId) || String((p as any)._id) === String(activeProjectId));
 
     const statusPriority = {
+        'Backlog': -1,
         'To Do': 0,
         'In Progress': 1,
-        'Done': 2
+        'Done': 2,
+        'Archived': 3
     };
 
     const priorityOrder = {
@@ -45,6 +48,16 @@ export default function Tasks() {
 
     // Filter tasks
     const filteredTasks = projectTasks.filter(task => {
+        // Board view filters out Backlog and Archived
+        if (view === 'board') {
+            if (task.status === 'Backlog' || task.status === 'Archived') return false;
+        }
+
+        // List view filters out Archived unless toggled
+        if (view === 'list') {
+            if (task.status === 'Archived' && !showArchived) return false;
+        }
+
         if (filters.status.length > 0 && !filters.status.includes(task.status)) {
             return false;
         }
@@ -72,9 +85,11 @@ export default function Tasks() {
     });
 
     const statusColors: Record<string, string> = {
+        'Backlog': 'bg-slate-500/10 text-slate-500',
         'To Do': 'bg-slate-500/10 text-slate-500',
         'In Progress': 'bg-blue-500/10 text-blue-500',
-        'Done': 'bg-green-500/10 text-green-500'
+        'Done': 'bg-green-500/10 text-green-500',
+        'Archived': 'bg-red-500/10 text-red-500'
     };
 
     // Show loading skeleton
@@ -121,12 +136,14 @@ export default function Tasks() {
                     <div className="flex items-center gap-2">
                         <StatusDropdown
                             currentStatus={task.status}
-                            options={['To Do', 'In Progress', 'Done']}
+                            options={['Backlog', 'To Do', 'In Progress', 'Done', 'Archived']}
                             onUpdate={(status) => updateTask(taskId, { status: status as any })}
                             colorMap={{
+                                'Backlog': 'bg-slate-500/10 text-slate-400',
                                 'To Do': 'bg-slate-500/10 text-slate-400',
                                 'In Progress': 'bg-blue-500/10 text-blue-500',
-                                'Done': 'bg-green-500/10 text-green-500'
+                                'Done': 'bg-green-500/10 text-green-500',
+                                'Archived': 'bg-red-500/10 text-red-500'
                             }}
                             disabled={!canEditTasks && !canCreateTasks}
                         />
@@ -229,6 +246,17 @@ export default function Tasks() {
                     >
                         <Filter size={24} />
                     </button>
+                    {view === 'list' && (
+                        <button
+                            onClick={() => setShowArchived(!showArchived)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-2 ${showArchived
+                                    ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                                    : 'bg-white/5 text-muted-foreground hover:bg-white/10'
+                                }`}
+                        >
+                            {showArchived ? 'Hide Archived' : 'Show Archived'}
+                        </button>
+                    )}
                     {canCreateTasks && (
                         <Link
                             to="/tasks/create"
@@ -245,7 +273,7 @@ export default function Tasks() {
                     <div>
                         <h3 className="text-sm font-semibold mb-2">Status</h3>
                         <div className="flex flex-wrap gap-2">
-                            {['To Do', 'In Progress', 'Done'].map(status => (
+                            {['Backlog', 'To Do', 'In Progress', 'Done', 'Archived'].map(status => (
                                 <button
                                     key={status}
                                     onClick={() => toggleFilter('status', status)}

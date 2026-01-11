@@ -35,7 +35,7 @@ export default function CreateTask() {
     // Form state
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [status, setStatus] = useState<'To Do' | 'In Progress' | 'Done'>('To Do');
+    const [status, setStatus] = useState<'Backlog' | 'To Do' | 'In Progress' | 'Done' | 'Archived'>('To Do');
     const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
     const [tags, setTags] = useState<string[]>([]);
     const [additionalInfo, setAdditionalInfo] = useState('');
@@ -144,12 +144,14 @@ export default function CreateTask() {
                         <label className="text-sm font-medium text-muted-foreground">Status</label>
                         <StatusDropdown
                             currentStatus={status}
-                            options={['To Do', 'In Progress', 'Done']}
+                            options={['Backlog', 'To Do', 'In Progress', 'Done', 'Archived']}
                             onUpdate={(s) => setStatus(s as any)}
                             colorMap={{
+                                'Backlog': 'bg-slate-500/10 text-slate-400',
                                 'To Do': 'bg-slate-500/10 text-slate-400',
                                 'In Progress': 'bg-blue-500/10 text-blue-500',
-                                'Done': 'bg-green-500/10 text-green-500'
+                                'Done': 'bg-green-500/10 text-green-500',
+                                'Archived': 'bg-red-500/10 text-red-500'
                             }}
                         />
                     </div>
