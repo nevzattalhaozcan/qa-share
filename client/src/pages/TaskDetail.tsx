@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
-import { ArrowLeft, Trash2, X, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { ArrowLeft, Trash2, X, ChevronLeft, ChevronRight, FileText, Edit2 } from 'lucide-react';
 import { usePermissions } from '../hooks/usePermissions';
 import { useAuth } from '../context/AuthContext';
 import StatusDropdown from '../components/StatusDropdown';
@@ -120,6 +120,15 @@ export default function TaskDetail() {
                     </Button>
                     <div className="flex items-center gap-1">
                         {/* Future Edit Task Button could go here */}
+                        {canEdit && (
+                            <button
+                                onClick={() => navigate(`/tasks/${(task as any)._id || task.id}/edit`)}
+                                className="p-2 hover:bg-white/10 rounded-lg transition-colors text-muted-foreground hover:text-white"
+                                title="Edit task"
+                            >
+                                <Edit2 size={20} />
+                            </button>
+                        )}
                         {canDeleteTask && (
                             <button
                                 onClick={() => setShowDeleteModal(true)}
