@@ -108,6 +108,7 @@ export interface Task {
     createdBy: string;
     createdAt: string;
     friendlyId?: string;
+    order?: number;
 }
 
 export interface Note {

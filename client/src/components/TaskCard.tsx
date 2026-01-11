@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import type { Task, TaskBoardSettings } from '../context/DataContext';
 import { useData } from '../context/DataContext';
 import { Draggable } from '@hello-pangea/dnd';
-import { Layers, ChevronRight, Link as LinkIcon, Paperclip } from 'lucide-react';
+import { Layers, Link as LinkIcon, Paperclip, Bug, ClipboardCheck } from 'lucide-react';
 
 interface TaskCardProps {
     task: Task;
@@ -20,6 +20,10 @@ export default function TaskCard({ task, index, settings }: TaskCardProps) {
 
     const subtasks = tasks.filter(t => t.parentId === taskId);
     const parentTask = task.parentId ? tasks.find(t => (t as any)._id === task.parentId || t.id === task.parentId) : null;
+
+    const linkedBugs = task.links?.filter(l => l.targetType === 'Bug') || [];
+    const linkedTests = task.links?.filter(l => l.targetType === 'TestCase') || [];
+    const otherTasks = task.links?.filter(l => l.targetType === 'Task') || [];
 
     return (
         <Draggable draggableId={taskId} index={index}>
@@ -66,16 +70,31 @@ export default function TaskCard({ task, index, settings }: TaskCardProps) {
                             <div className="flex items-center gap-2">
                                 <span>#{taskId.slice(-4)}</span>
                                 {subtasks.length > 0 && (
-                                    <span className="flex items-center gap-0.5" title={`${subtasks.length} subtasks`}>
-                                        <ChevronRight size={10} />
+                                    <span className="flex items-center gap-0.5 text-primary" title={`${subtasks.length} subtasks`}>
+                                        <Layers size={10} />
                                         {subtasks.length}
                                     </span>
                                 )}
                                 {task.attachments && task.attachments.length > 0 && (
                                     <span title={`${task.attachments.length} attachments`}><Paperclip size={10} /></span>
                                 )}
-                                {task.links && task.links.length > 0 && (
-                                    <span title={`${task.links.length} linked items`}><LinkIcon size={10} /></span>
+                                {linkedBugs.length > 0 && (
+                                    <span className="flex items-center gap-0.5 text-red-500" title={`${linkedBugs.length} linked bugs`}>
+                                        <Bug size={10} />
+                                        {linkedBugs.length}
+                                    </span>
+                                )}
+                                {linkedTests.length > 0 && (
+                                    <span className="flex items-center gap-0.5 text-green-500" title={`${linkedTests.length} linked test cases`}>
+                                        <ClipboardCheck size={10} />
+                                        {linkedTests.length}
+                                    </span>
+                                )}
+                                {otherTasks.length > 0 && (
+                                    <span className="flex items-center gap-0.5" title={`${otherTasks.length} linked tasks`}>
+                                        <LinkIcon size={10} />
+                                        {otherTasks.length}
+                                    </span>
                                 )}
                             </div>
                             <span>{new Date(task.createdAt).toLocaleDateString()}</span>

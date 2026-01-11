@@ -9,7 +9,7 @@ export const getTasks = async (req: Request, res: Response) => {
         if (!projectId) {
             return res.status(400).json({ msg: 'Project ID is required' });
         }
-        const tasks = await Task.find({ projectId }).sort({ createdAt: -1 });
+        const tasks = await Task.find({ projectId }).sort({ order: 1, createdAt: -1 });
         res.json(tasks);
     } catch (err) {
         res.status(500).send('Server Error');
@@ -18,7 +18,7 @@ export const getTasks = async (req: Request, res: Response) => {
 
 export const createTask = async (req: Request, res: Response) => {
     try {
-        const { projectId, title, description, status, priority, tags, additionalInfo, attachments, parentId, links } = req.body;
+        const { projectId, title, description, status, priority, tags, additionalInfo, attachments, parentId, links, order } = req.body;
         const task = new Task({
             projectId,
             title,
@@ -30,6 +30,7 @@ export const createTask = async (req: Request, res: Response) => {
             attachments,
             parentId,
             links,
+            order: order || 0,
             createdBy: (req as any).user.id
         });
         await task.save();
@@ -56,7 +57,7 @@ export const createTask = async (req: Request, res: Response) => {
 
 export const updateTask = async (req: Request, res: Response) => {
     try {
-        const { title, description, status, priority, tags, additionalInfo, attachments, parentId, links } = req.body;
+        const { title, description, status, priority, tags, additionalInfo, attachments, parentId, links, order } = req.body;
         let task = await Task.findById(req.params.id);
 
         if (!task) {
@@ -116,6 +117,7 @@ export const updateTask = async (req: Request, res: Response) => {
         }
 
         task.links = links || task.links;
+        task.order = order !== undefined ? order : task.order;
 
         await task.save();
         res.json(task);
