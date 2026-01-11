@@ -107,6 +107,7 @@ export interface Task {
     links?: TaskLink[];
     createdBy: string;
     createdAt: string;
+    friendlyId?: string;
 }
 
 export interface Note {

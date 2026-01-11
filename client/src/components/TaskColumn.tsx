@@ -9,22 +9,32 @@ interface TaskColumnProps {
     settings?: TaskBoardSettings;
 }
 
-export default function TaskColumn({ column, tasks, settings }: TaskColumnProps) {
-    return (
-        <div className="flex flex-col w-80 min-w-80 h-full bg-slate-900/40 rounded-2xl border border-white/5 pb-2">
-            <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-sm text-slate-200 uppercase tracking-wider">{column.title}</h3>
-                    <span className="px-2 py-0.5 bg-white/5 rounded-full text-xs text-muted-foreground">
-                        {tasks.length}
-                    </span>
-                </div>
-                <button className="p-1 hover:bg-white/5 rounded text-muted-foreground">
-                    <MoreVertical size={16} />
-                </button>
-            </div>
+interface TaskColumnProps {
+    column: TaskBoardColumn;
+    tasks: Task[];
+    settings?: TaskBoardSettings;
+    droppableId?: string;
+    hideHeader?: boolean;
+}
 
-            <Droppable droppableId={column.status}>
+export default function TaskColumn({ column, tasks, settings, droppableId, hideHeader }: TaskColumnProps) {
+    return (
+        <div className={`flex flex-col w-80 min-w-80 h-full ${hideHeader ? 'bg-transparent' : 'bg-slate-900/40'} rounded-2xl border border-white/5 pb-2`}>
+            {!hideHeader && (
+                <div className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-sm text-slate-200 uppercase tracking-wider">{column.title}</h3>
+                        <span className="px-2 py-0.5 bg-white/5 rounded-full text-xs text-muted-foreground">
+                            {tasks.length}
+                        </span>
+                    </div>
+                    <button className="p-1 hover:bg-white/5 rounded text-muted-foreground">
+                        <MoreVertical size={16} />
+                    </button>
+                </div>
+            )}
+
+            <Droppable droppableId={droppableId || column.status}>
                 {(provided, snapshot) => (
                     <div
                         ref={provided.innerRef}
