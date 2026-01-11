@@ -24,6 +24,7 @@ export default function EditTask() {
     const [tags, setTags] = useState<string[]>([]);
     const [additionalInfo, setAdditionalInfo] = useState('');
     const [attachments, setAttachments] = useState<string[]>([]);
+    const [assignedTo, setAssignedTo] = useState('');
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
@@ -35,6 +36,7 @@ export default function EditTask() {
             setTags(task.tags || []);
             setAdditionalInfo(task.additionalInfo || '');
             setAttachments(task.attachments || []);
+            setAssignedTo(task.assignedTo || '');
         }
     }, [task]);
 
@@ -105,6 +107,7 @@ export default function EditTask() {
                 tags,
                 additionalInfo,
                 attachments,
+                assignedTo
             });
             navigate(`/tasks/${taskId}`);
         } catch (err) {
@@ -168,6 +171,23 @@ export default function EditTask() {
                                 'High': 'bg-orange-500/10 text-orange-500'
                             }}
                         />
+                    </div>
+
+                    {/* Assigned To */}
+                    <div className="space-y-2 col-span-2">
+                        <label className="text-sm font-medium text-muted-foreground">Assigned To</label>
+                        <select
+                            value={assignedTo}
+                            onChange={(e) => setAssignedTo(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
+                        >
+                            <option value="">Unassigned</option>
+                            {useData().projects.find(p => (p as any)._id === task?.projectId || p.id === task?.projectId)?.members.map(member => (
+                                <option key={member.id} value={member.id}>
+                                    {member.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

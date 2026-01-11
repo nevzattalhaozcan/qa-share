@@ -109,6 +109,8 @@ export interface Task {
     createdAt: string;
     friendlyId?: string;
     order?: number;
+    reporter: string;
+    assignedTo?: string;
 }
 
 export interface Note {

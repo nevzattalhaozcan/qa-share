@@ -18,7 +18,7 @@ export const getTasks = async (req: Request, res: Response) => {
 
 export const createTask = async (req: Request, res: Response) => {
     try {
-        const { projectId, title, description, status, priority, tags, additionalInfo, attachments, parentId, links, order } = req.body;
+        const { projectId, title, description, status, priority, tags, additionalInfo, attachments, parentId, links, order, assignedTo } = req.body;
         const task = new Task({
             projectId,
             title,
@@ -31,6 +31,8 @@ export const createTask = async (req: Request, res: Response) => {
             parentId,
             links,
             order: order || 0,
+            assignedTo,
+            reporter: (req as any).user.id,
             createdBy: (req as any).user.id
         });
         await task.save();
@@ -57,7 +59,7 @@ export const createTask = async (req: Request, res: Response) => {
 
 export const updateTask = async (req: Request, res: Response) => {
     try {
-        const { title, description, status, priority, tags, additionalInfo, attachments, parentId, links, order } = req.body;
+        const { title, description, status, priority, tags, additionalInfo, attachments, parentId, links, order, assignedTo } = req.body;
         let task = await Task.findById(req.params.id);
 
         if (!task) {
@@ -72,6 +74,7 @@ export const updateTask = async (req: Request, res: Response) => {
         task.additionalInfo = additionalInfo || task.additionalInfo;
         task.attachments = attachments || task.attachments;
         task.parentId = parentId !== undefined ? parentId : task.parentId;
+        if (assignedTo !== undefined) task.assignedTo = assignedTo;
 
         if (links) {
             const oldLinks = task.links || [];

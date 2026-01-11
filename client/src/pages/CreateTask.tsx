@@ -39,6 +39,7 @@ export default function CreateTask() {
     const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
     const [tags, setTags] = useState<string[]>([]);
     const [additionalInfo, setAdditionalInfo] = useState('');
+    const [assignedTo, setAssignedTo] = useState('');
 
     // File upload state
     const [attachments, setAttachments] = useState<string[]>([]);
@@ -87,7 +88,9 @@ export default function CreateTask() {
                 tags,
                 additionalInfo,
                 attachments,
-                parentId
+                parentId,
+                assignedTo,
+                reporter: 'pending' // Backend sets this based on token
             });
             if (location.state?.returnTo) {
                 navigate(location.state.returnTo.pathname + location.state.returnTo.search);
@@ -169,6 +172,23 @@ export default function CreateTask() {
                                 'High': 'bg-orange-500/10 text-orange-500'
                             }}
                         />
+                    </div>
+
+                    {/* Assigned To */}
+                    <div className="space-y-2 col-span-2">
+                        <label className="text-sm font-medium text-muted-foreground">Assigned To</label>
+                        <select
+                            value={assignedTo}
+                            onChange={(e) => setAssignedTo(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all cursor-pointer"
+                        >
+                            <option value="">Unassigned</option>
+                            {useData().projects.find(p => (p as any)._id === activeProjectId || p.id === activeProjectId)?.members.map(member => (
+                                <option key={member.id} value={member.id}>
+                                    {member.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
                 </div>
 

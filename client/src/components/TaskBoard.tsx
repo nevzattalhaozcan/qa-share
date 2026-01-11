@@ -69,19 +69,55 @@ export default function TaskBoard({ project, tasks }: TaskBoardProps) {
         const targetStatus = destination.droppableId.substring(lastColonIndex + 1);
 
         if (targetStatus) {
-            const updates: any = {
-                status: targetStatus as any,
-                order: destination.index
-            };
-
-            // Handle parent/standalone transitions
+            // Determine new parentId
+            let newParentId: string | null = null;
             if (targetParentId === 'standalone') {
-                updates.parentId = null;
+                newParentId = null;
             } else if (targetParentId && targetParentId !== 'standalone') {
-                updates.parentId = targetParentId;
+                newParentId = targetParentId;
             }
 
-            updateTask(draggableId, updates);
+            // Get tasks in destination group (excluding the dragged one)
+            const destinationTasks = sortedTasks.filter(t => {
+                const tId = getTaskId(t);
+                if (tId === draggableId) return false; // Exclude dragged task
+
+                // Match parent
+                const tParentId = t.parentId || null;
+                const matchParent = tParentId === newParentId;
+
+                // Match status
+                const matchStatus = t.status === targetStatus;
+
+                return matchParent && matchStatus;
+            });
+
+            // Insert dragged task at new index
+            // We need the dragged task object but with updated properties to represent its new state in the list
+            const draggedTask = tasks.find(t => getTaskId(t) === draggableId);
+            if (!draggedTask) return;
+
+            // Splice into the detailed array to get correct order indices
+            const newOrderList = [...destinationTasks];
+            newOrderList.splice(destination.index, 0, draggedTask);
+
+            // Update all modified tasks
+            newOrderList.forEach((t, index) => {
+                const tId = getTaskId(t);
+                const isDrivenTask = tId === draggableId;
+
+                if (isDrivenTask) {
+                    // Update dragged task with all changes
+                    updateTask(tId, {
+                        status: targetStatus as any,
+                        parentId: newParentId as any, // Cast to any to handle null/undefined differences if types strictly assume string
+                        order: index
+                    });
+                } else if (t.order !== index) {
+                    // Only update valid neighbors if their order changed
+                    updateTask(tId, { order: index });
+                }
+            });
         }
     };
 

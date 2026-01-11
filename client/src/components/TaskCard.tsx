@@ -12,11 +12,14 @@ interface TaskCardProps {
 
 export default function TaskCard({ task, index, settings }: TaskCardProps) {
     const location = useLocation();
-    const { tasks } = useData();
+    const { tasks, projects } = useData();
     const taskId = (task as any)._id || task.id;
+    const project = projects.find(p => (p as any)._id === task.projectId || p.id === task.projectId);
+    const assignee = task.assignedTo ? project?.members.find(m => m.id === task.assignedTo)?.name : null;
 
     const showPriority = settings?.visibleFields.priority !== false;
     const showTags = settings?.visibleFields.tags !== false;
+    const showAssignee = settings?.visibleFields.assignee !== false;
 
     const subtasks = tasks.filter(t => t.parentId === taskId);
     const parentTask = task.parentId ? tasks.find(t => (t as any)._id === task.parentId || t.id === task.parentId) : null;
@@ -68,7 +71,14 @@ export default function TaskCard({ task, index, settings }: TaskCardProps) {
 
                         <div className="flex items-center justify-between text-[9px] text-muted-foreground pt-1 border-t border-white/5">
                             <div className="flex items-center gap-2">
-                                <span>#{taskId.slice(-4)}</span>
+                                <span className="flex items-center gap-1">
+                                    <span>#{taskId.slice(-4)}</span>
+                                    {showAssignee && assignee && (
+                                        <span className="text-primary truncate max-w-[80px]" title={`Assigned to ${assignee}`}>
+                                            • {assignee.split(' ')[0]}
+                                        </span>
+                                    )}
+                                </span>
                                 {subtasks.length > 0 && (
                                     <span className="flex items-center gap-0.5 text-primary" title={`${subtasks.length} subtasks`}>
                                         <Layers size={10} />

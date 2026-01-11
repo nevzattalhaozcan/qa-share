@@ -14,6 +14,8 @@ const taskSchema = new mongoose.Schema({
         targetType: { type: String, enum: ['Task', 'Bug', 'TestCase'], required: true },
         targetId: { type: mongoose.Schema.Types.ObjectId, required: true }
     }],
+    reporter: { type: String, required: true },
+    assignedTo: { type: String },
     createdBy: { type: String },
     createdAt: { type: Date, default: Date.now },
     order: { type: Number, default: 0 },
