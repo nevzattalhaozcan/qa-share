@@ -76,6 +76,11 @@ export const updateTask = async (req: Request, res: Response) => {
         task.parentId = parentId !== undefined ? parentId : task.parentId;
         if (assignedTo !== undefined) task.assignedTo = assignedTo;
 
+        // Backfill reporter for legacy tasks if missing
+        if (!task.reporter) {
+            task.reporter = task.createdBy || (req as any).user.id;
+        }
+
         if (links) {
             const oldLinks = task.links || [];
             const newLinks = links;
