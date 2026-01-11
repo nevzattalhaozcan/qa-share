@@ -14,7 +14,8 @@ const getNextFriendlyId = async (model: any, prefix: string) => {
 
 // Helper to generate run ID
 const generateRunId = async (projectId: string): Promise<string> => {
-    const latestRun = await TestRun.findOne({ projectId })
+    // Find absolute latest run across ALL projects to ensure uniqueness
+    const latestRun = await TestRun.findOne({})
         .sort({ createdAt: -1 })
         .select('runId');
 
