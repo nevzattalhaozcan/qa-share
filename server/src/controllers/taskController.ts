@@ -32,8 +32,8 @@ export const createTask = async (req: Request, res: Response) => {
             links,
             order: order || 0,
             assignedTo,
-            reporter: (req as any).user.id,
-            createdBy: (req as any).user.id
+            reporter: (req as any).user.user?.id || (req as any).user.id,
+            createdBy: (req as any).user.user?.id || (req as any).user.id
         });
         await task.save();
 
@@ -78,7 +78,8 @@ export const updateTask = async (req: Request, res: Response) => {
 
         // Backfill reporter for legacy tasks if missing
         if (!task.reporter) {
-            task.reporter = task.createdBy || (req as any).user.id;
+            const userId = (req as any).user.user?.id || (req as any).user.id;
+            task.reporter = task.createdBy || userId;
         }
 
         if (links) {
