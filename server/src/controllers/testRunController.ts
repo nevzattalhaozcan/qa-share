@@ -4,7 +4,8 @@ import { TestCase } from '../models/TestCase';
 
 // Generate a unique run ID (e.g., RUN-001, RUN-002)
 async function generateRunId(projectId: string): Promise<string> {
-    const latestRun = await TestRun.findOne({ projectId })
+    // Find absolute latest run across ALL projects to ensure uniqueness
+    const latestRun = await TestRun.findOne({})
         .sort({ createdAt: -1 })
         .select('runId');
 
