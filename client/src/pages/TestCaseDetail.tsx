@@ -60,7 +60,7 @@ export default function TestCaseDetail() {
         };
 
         fetchTestRuns();
-    }, [testCase?.id, (testCase as any)?._id]);
+    }, [testCase?.id, (testCase as any)?._id, testCase?.status]);
 
     if (!testCase) {
         return (
@@ -336,7 +336,7 @@ export default function TestCaseDetail() {
                                                 <div className="flex items-center justify-between mb-1">
                                                     <div className="flex items-center gap-2">
                                                         <span className={`w-2 h-2 rounded-full ${task.priority === 'High' ? 'bg-orange-500' :
-                                                                task.priority === 'Medium' ? 'bg-blue-500' : 'bg-slate-500'
+                                                            task.priority === 'Medium' ? 'bg-blue-500' : 'bg-slate-500'
                                                             }`} />
                                                         <span className="text-xs font-semibold">{task.status}</span>
                                                     </div>
@@ -367,39 +367,39 @@ export default function TestCaseDetail() {
             </div>
 
             {/* Test Run History */}
-            {
-                testRuns.length > 0 && (
-                    <div className="glass-card p-6 rounded-2xl">
-                        <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2 mb-4">
-                            <PlayCircle size={14} />
-                            Test Run History
-                        </h3>
-                        <div className="space-y-2">
-                            {testRuns.map((run) => (
-                                <div
-                                    key={run._id}
-                                    className="bg-white/5 p-3 rounded-lg border border-white/5 flex items-center justify-between"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="font-mono text-xs text-primary bg-primary/10 px-2 py-1 rounded">
-                                            {run.runId}
-                                        </span>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${run.status === 'Pass'
-                                            ? 'bg-green-500/10 text-green-500'
-                                            : 'bg-red-500/10 text-red-500'
-                                            }`}>
-                                            {run.status}
-                                        </span>
-                                    </div>
-                                    <span className="text-xs text-muted-foreground">
-                                        {new Date(run.runDateTime).toLocaleString()}
+            <div className="glass-card p-6 rounded-2xl">
+                <h3 className="font-semibold text-muted-foreground uppercase text-xs tracking-wider flex items-center gap-2 mb-4">
+                    <PlayCircle size={14} />
+                    Test Run History
+                </h3>
+                {testRuns.length > 0 ? (
+                    <div className="space-y-2">
+                        {testRuns.map((run) => (
+                            <div
+                                key={run._id}
+                                className="bg-white/5 p-3 rounded-lg border border-white/5 flex items-center justify-between"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <span className="font-mono text-xs text-primary bg-primary/10 px-2 py-1 rounded">
+                                        {run.runId}
+                                    </span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${run.status === 'Pass'
+                                        ? 'bg-green-500/10 text-green-500'
+                                        : 'bg-red-500/10 text-red-500'
+                                        }`}>
+                                        {run.status}
                                     </span>
                                 </div>
-                            ))}
-                        </div>
+                                <span className="text-xs text-muted-foreground">
+                                    {new Date(run.runDateTime).toLocaleString()}
+                                </span>
+                            </div>
+                        ))}
                     </div>
-                )
-            }
+                ) : (
+                    <p className="text-sm text-muted-foreground italic">No test runs yet.</p>
+                )}
+            </div>
 
             <AnimatePresence>
                 {showLinkSelector && (
