@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { ArrowLeft, Save, Upload, X, ChevronLeft } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X } from 'lucide-react';
 import TagInput from '../components/TagInput';
 import StatusDropdown from '../components/StatusDropdown';
 import api from '../lib/api';
