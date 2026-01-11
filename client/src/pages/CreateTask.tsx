@@ -184,7 +184,7 @@ export default function CreateTask() {
                         >
                             <option value="">Unassigned</option>
                             {useData().projects.find(p => (p as any)._id === activeProjectId || p.id === activeProjectId)?.members.map(member => (
-                                <option key={member.id} value={member.id}>
+                                <option key={member.id} value={(member as any).userId || member.id}>
                                     {member.name}
                                 </option>
                             ))}

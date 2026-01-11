@@ -18,7 +18,11 @@ export default function TaskCard({ task, index, settings }: TaskCardProps) {
 
     const resolveUserName = (userId: string | undefined) => {
         if (!userId) return null;
-        const member = project?.members.find(m => m.id === userId || (m as any)._id === userId);
+        const member = project?.members.find(m =>
+            m.id === userId ||
+            (m as any)._id === userId ||
+            (m as any).userId === userId
+        );
         return member ? member.name : userId;
     };
 

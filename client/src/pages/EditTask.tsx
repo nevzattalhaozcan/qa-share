@@ -183,7 +183,7 @@ export default function EditTask() {
                         >
                             <option value="">Unassigned</option>
                             {useData().projects.find(p => (p as any)._id === task?.projectId || p.id === task?.projectId)?.members.map(member => (
-                                <option key={member.id} value={member.id}>
+                                <option key={member.id} value={(member as any).userId || member.id}>
                                     {member.name}
                                 </option>
                             ))}
