@@ -72,7 +72,7 @@ export default function Layout() {
                                 className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors"
                             >
                                 <span className="text-xs text-muted-foreground">Project</span>
-                                <span className="text-sm font-semibold truncate max-w-[80px]">{activeProject.name}</span>
+                                <span className="text-sm font-semibold truncate max-w-[100px] sm:max-w-[200px]">{activeProject.name}</span>
                                 <ChevronDown size={14} className={cn("text-muted-foreground transition-transform", showProjectMenu && "rotate-180")} />
                             </button>
                         </div>
@@ -191,7 +191,7 @@ export default function Layout() {
             </AnimatePresence>
 
             {/* Main Content */}
-            <main className="pt-16 px-4 max-w-md mx-auto">
+            <main className="pt-16 px-4 max-w-7xl mx-auto w-full">
                 <Outlet />
             </main>
 

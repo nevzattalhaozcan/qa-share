@@ -143,8 +143,8 @@ export default function Tasks() {
     return (
         <div className="space-y-6 pb-20">
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <h1 className="text-2xl font-bold">Tasks</h1>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 overflow-hidden">
+                    <h1 className="text-xl sm:text-2xl font-bold truncate">Tasks</h1>
                     <div className="flex bg-white/5 p-1 rounded-xl">
                         <button
                             onClick={() => setView('list')}
@@ -162,7 +162,7 @@ export default function Tasks() {
                         </button>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                     {/* Sort Dropdown - only show in list view */}
                     {view === 'list' && (
                         <div className="relative">
