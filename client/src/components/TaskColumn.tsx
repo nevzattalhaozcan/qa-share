@@ -19,7 +19,7 @@ interface TaskColumnProps {
 
 export default function TaskColumn({ column, tasks, settings, droppableId, hideHeader }: TaskColumnProps) {
     return (
-        <div className={`flex flex-col w-72 min-w-72 h-full ${hideHeader ? 'bg-transparent' : 'bg-slate-900/40'} rounded-2xl border border-white/5 pb-2`}>
+        <div className={`flex flex-col flex-1 min-w-[200px] max-w-[320px] h-full ${hideHeader ? 'bg-transparent' : 'bg-slate-900/40'} rounded-2xl border border-white/5 pb-2`}>
             {!hideHeader && (
                 <div className="p-4 flex items-center justify-between">
                     <div className="flex items-center gap-2">
