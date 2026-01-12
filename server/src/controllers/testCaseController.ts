@@ -4,12 +4,20 @@ import { Bug } from '../models/Bug';
 import { TestRun } from '../models/TestRun';
 import { Task } from '../models/Task';
 
-// Helper to generate friendly ID
+// Helper to generate friendly ID - finds the actual maximum ID number
 const getNextFriendlyId = async (model: any, prefix: string) => {
-    const lastItem = await model.findOne({ friendlyId: { $regex: `^${prefix}-` } }).sort({ createdAt: -1 });
-    if (!lastItem || !lastItem.friendlyId) return `${prefix}-1`;
-    const lastIdNum = parseInt(lastItem.friendlyId.split('-')[1]);
-    return `${prefix}-${lastIdNum + 1}`;
+    // Find the maximum existing ID number by aggregating all items with this prefix
+    const items = await model.find({ friendlyId: { $regex: `^${prefix}-\\d+$` } }).select('friendlyId');
+    let maxNum = 0;
+    for (const item of items) {
+        if (item.friendlyId) {
+            const num = parseInt(item.friendlyId.split('-')[1]);
+            if (!isNaN(num) && num > maxNum) {
+                maxNum = num;
+            }
+        }
+    }
+    return `${prefix}-${maxNum + 1}`;
 };
 
 // Helper to generate run ID
@@ -334,11 +342,16 @@ export const createTestCasesBulk = async (req: Request, res: Response) => {
             return res.status(400).json({ msg: 'Request body must be a non-empty array of test cases' });
         }
 
-        // Get the last friendly ID once to start the sequence
-        const lastItem = await TestCase.findOne({ friendlyId: { $regex: '^TC-' } }).sort({ createdAt: -1 });
+        // Get the max friendly ID number by checking all existing items
+        const existingItems = await TestCase.find({ friendlyId: { $regex: '^TC-\\d+$' } }).select('friendlyId');
         let lastIdNum = 0;
-        if (lastItem && lastItem.friendlyId) {
-            lastIdNum = parseInt(lastItem.friendlyId.split('-')[1]);
+        for (const item of existingItems) {
+            if (item.friendlyId) {
+                const num = parseInt(item.friendlyId.split('-')[1]);
+                if (!isNaN(num) && num > lastIdNum) {
+                    lastIdNum = num;
+                }
+            }
         }
 
         const testCasesToInsert = testCasesData.map((data: any) => {
