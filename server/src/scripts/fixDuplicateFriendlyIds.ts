@@ -7,11 +7,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || '';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/qa-share';
 
 async function fixDuplicates() {
     try {
-        await mongoose.connect(MONGO_URI);
+        await mongoose.connect(MONGODB_URI);
         console.log('Connected to MongoDB');
 
         // Get all test cases with friendlyIds
