@@ -43,7 +43,7 @@ export default function TaskCard({ task, index }: TaskCardProps) {
                         </h4>
 
                         <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                            <span className="font-mono opacity-70">#{taskId.slice(-4)}</span>
+                            <span className="font-mono opacity-70">{task.friendlyId || `#${taskId.slice(-4)}`}</span>
                             {assignee && (
                                 <span className="text-primary font-medium truncate max-w-[100px]" title={`Assigned to ${assignee}`}>
                                     {assignee.split(' ')[0]}

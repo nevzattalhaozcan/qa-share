@@ -3,6 +3,14 @@ import { Task } from '../models/Task';
 import { Bug } from '../models/Bug';
 import { TestCase } from '../models/TestCase';
 
+// Helper to generate friendly ID
+const getNextFriendlyId = async (): Promise<string> => {
+    const lastItem = await Task.findOne({ friendlyId: { $regex: '^TASK-' } }).sort({ createdAt: -1 });
+    if (!lastItem || !lastItem.friendlyId) return 'TASK-1';
+    const lastIdNum = parseInt(lastItem.friendlyId.split('-')[1]);
+    return `TASK-${lastIdNum + 1}`;
+};
+
 export const getTasks = async (req: Request, res: Response) => {
     try {
         const { projectId } = req.query;
@@ -19,6 +27,7 @@ export const getTasks = async (req: Request, res: Response) => {
 export const createTask = async (req: Request, res: Response) => {
     try {
         const { projectId, title, description, status, priority, tags, additionalInfo, attachments, parentId, links, order, assignedTo } = req.body;
+        const friendlyId = await getNextFriendlyId();
         const task = new Task({
             projectId,
             title,
@@ -32,6 +41,7 @@ export const createTask = async (req: Request, res: Response) => {
             links,
             order: order || 0,
             assignedTo,
+            friendlyId,
             reporter: (req as any).user.user?.id || (req as any).user.id,
             createdBy: (req as any).user.user?.id || (req as any).user.id
         });
