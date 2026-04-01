@@ -8,6 +8,9 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+const isProduction = process.env.NODE_ENV === 'production';
+const MONGODB_URI = process.env.MONGODB_URI;
+let databaseReady = false;
 
 // CORS configuration
 const corsOptions = {
@@ -71,40 +74,59 @@ app.get('/', (req, res) => {
 
 // Health check endpoint for keep-alive ping
 app.get('/api/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.status(databaseReady ? 200 : 503).json({
+        status: databaseReady ? 'ok' : 'degraded',
+        databaseReady,
+        timestamp: new Date().toISOString()
+    });
 });
 
-// Connect to MongoDB
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/qa-share';
+app.listen(Number(PORT), '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
 
-mongoose.connect(MONGODB_URI)
-    .then(async () => {
+    // Keep-alive: Self-ping every 14 minutes to prevent Render from spinning down
+    if (isProduction && process.env.RENDER_EXTERNAL_URL) {
+        const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes
+
+        setInterval(async () => {
+            try {
+                const response = await fetch(`${process.env.RENDER_EXTERNAL_URL}/api/health`);
+                console.log(`Keep-alive ping: ${response.status}`);
+            } catch (error) {
+                console.error('Keep-alive ping failed:', error);
+            }
+        }, PING_INTERVAL);
+
+        console.log('Keep-alive ping scheduled every 14 minutes');
+    }
+});
+
+async function connectToMongo() {
+    const mongoUri = MONGODB_URI || 'mongodb://localhost:27017/qa-share';
+
+    if (isProduction && !MONGODB_URI) {
+        console.error('MONGODB_URI is not set. Render deployment will stay up, but database-dependent routes will not work until it is configured.');
+        return;
+    }
+
+    try {
+        await mongoose.connect(mongoUri);
+        databaseReady = true;
         console.log('Connected to MongoDB');
 
         // Seed database with default users
         await seedDatabase();
-
-        // Bind to 0.0.0.0 to ensure external access (required for Render)
-        app.listen(Number(PORT), '0.0.0.0', () => {
-            console.log(`Server running on port ${PORT}`);
-
-            // Keep-alive: Self-ping every 14 minutes to prevent Render from spinning down
-            if (process.env.NODE_ENV === 'production' && process.env.RENDER_EXTERNAL_URL) {
-                const PING_INTERVAL = 14 * 60 * 1000; // 14 minutes
-
-                setInterval(async () => {
-                    try {
-                        const response = await fetch(`${process.env.RENDER_EXTERNAL_URL}/api/health`);
-                        console.log(`Keep-alive ping: ${response.status}`);
-                    } catch (error) {
-                        console.error('Keep-alive ping failed:', error);
-                    }
-                }, PING_INTERVAL);
-
-                console.log('Keep-alive ping scheduled every 14 minutes');
-            }
-        });
-    })
-    .catch((err) => {
+    } catch (err) {
+        databaseReady = false;
         console.error('MongoDB connection error:', err);
-    });
+
+        if (isProduction) {
+            console.log('Retrying MongoDB connection in 5 seconds...');
+            setTimeout(() => {
+                void connectToMongo();
+            }, 5000);
+        }
+    }
+}
+
+void connectToMongo();
